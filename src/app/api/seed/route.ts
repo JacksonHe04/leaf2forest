@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createRecording } from '@/lib/db/utils';
 
-export async function GET() {
+export async function POST() {
   try {
     // 测试数据
     const testRecordings = [
