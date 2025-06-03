@@ -1,6 +1,11 @@
 import { getRecordings } from '@/lib/db/utils';
 import Link from 'next/link';
 
+// 添加动态渲染配置
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+// 也可以设置缓存时间为 60，表示每 60 秒重新获取一次数据
+// export const revalidate = 60;
 export default async function Home() {
   const recordings = await getRecordings();
   console.log('获取到的录音列表:', recordings);
