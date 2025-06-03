@@ -7,7 +7,7 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">我的高中回忆录</h1>
+      <h1 className="text-3xl font-bold mb-8">高中记忆录</h1>
       
       {recordings.length === 0 ? (
         <div className="text-center py-12">
