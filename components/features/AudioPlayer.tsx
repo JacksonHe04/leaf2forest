@@ -14,12 +14,7 @@ const AudioPlayer = ({ url }: Props) => {
   const [error, setError] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement>(null);
 
-  // 对 URL 进行编码，使用 encodeURIComponent 来编码所有特殊字符
-  const encodedUrl = url.split('/').map((part, index) => {
-    // 不编码域名部分
-    if (index < 3) return part;
-    return encodeURIComponent(part);
-  }).join('/');
+
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -77,7 +72,7 @@ const AudioPlayer = ({ url }: Props) => {
       audio.removeEventListener('timeupdate', handleTimeUpdate);
       audio.removeEventListener('error', handleError);
     };
-  }, [encodedUrl]); // 使用编码后的 URL
+  }, [url]); // 使用原始 URL
 
   const togglePlay = () => {
     if (!audioRef.current || error) return;
@@ -113,16 +108,14 @@ const AudioPlayer = ({ url }: Props) => {
         <div className="mt-2 text-sm text-gray-500">
           原始URL: {url}
         </div>
-        <div className="mt-1 text-sm text-gray-500">
-          编码后URL: {encodedUrl}
-        </div>
+
       </div>
     );
   }
 
   return (
     <div className="bg-white rounded-lg shadow-md p-4">
-      <audio ref={audioRef} src={encodedUrl} preload="auto" />
+      <audio ref={audioRef} src={url} preload="auto" />
       
       <div className="flex items-center gap-4">
         <button
@@ -170,4 +163,4 @@ const AudioPlayer = ({ url }: Props) => {
   );
 };
 
-export default AudioPlayer; 
+export default AudioPlayer;
