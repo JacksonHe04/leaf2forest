@@ -14,12 +14,20 @@ export default async function Home() {
     <main className="container mx-auto px-4 py-8">
       <div className="flex justify-between items-center mb-8">
         <h1 className="text-3xl font-bold">高中记忆录</h1>
-        <Link 
-          href="/admin" 
-          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
-        >
-          数据库管理
-        </Link>
+        <div className="flex gap-3">
+          <Link 
+            href="/blob-demo" 
+            className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors"
+          >
+            Blob存储演示
+          </Link>
+          <Link 
+            href="/admin" 
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+          >
+            数据库管理
+          </Link>
+        </div>
       </div>
       
       {recordings.length === 0 ? (
