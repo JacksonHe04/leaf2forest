@@ -7,14 +7,15 @@ import { ObjectId } from 'mongodb';
  */
 export async function GET(
   request: Request,
-  { params }: { params: { name: string; id: string } }
+  { params }: { params: Promise<{ name: string; id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const client = await clientPromise;
     const db = client.db('leaf-to-forest');
-    const collection = db.collection(params.name);
+    const collection = db.collection(resolvedParams.name);
     
-    const document = await collection.findOne({ _id: new ObjectId(params.id) });
+    const document = await collection.findOne({ _id: new ObjectId(resolvedParams.id) });
     
     if (!document) {
       return NextResponse.json(
@@ -41,14 +42,15 @@ export async function GET(
  */
 export async function PUT(
   request: Request,
-  { params }: { params: { name: string; id: string } }
+  { params }: { params: Promise<{ name: string; id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const body = await request.json();
     
     const client = await clientPromise;
     const db = client.db('leaf-to-forest');
-    const collection = db.collection(params.name);
+    const collection = db.collection(resolvedParams.name);
     
     // 移除_id字段，避免更新冲突
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -58,7 +60,7 @@ export async function PUT(
     updateData.updatedAt = new Date();
     
     const result = await collection.updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(resolvedParams.id) },
       { $set: updateData }
     );
     
@@ -87,14 +89,15 @@ export async function PUT(
  */
 export async function DELETE(
   request: Request,
-  { params }: { params: { name: string; id: string } }
+  { params }: { params: Promise<{ name: string; id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const client = await clientPromise;
     const db = client.db('leaf-to-forest');
-    const collection = db.collection(params.name);
+    const collection = db.collection(resolvedParams.name);
     
-    const result = await collection.deleteOne({ _id: new ObjectId(params.id) });
+    const result = await collection.deleteOne({ _id: new ObjectId(resolvedParams.id) });
     
     if (result.deletedCount === 0) {
       return NextResponse.json(

@@ -6,9 +6,10 @@ import clientPromise from '@/lib/db/mongodb';
  */
 export async function GET(
   request: Request,
-  { params }: { params: { name: string } }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const { searchParams } = new URL(request.url);
     const page = parseInt(searchParams.get('page') || '1');
     const limit = parseInt(searchParams.get('limit') || '10');
@@ -16,7 +17,7 @@ export async function GET(
     
     const client = await clientPromise;
     const db = client.db('leaf-to-forest');
-    const collection = db.collection(params.name);
+    const collection = db.collection(resolvedParams.name);
     
     // 获取文档总数
     const total = await collection.countDocuments();
@@ -55,14 +56,15 @@ export async function GET(
  */
 export async function POST(
   request: Request,
-  { params }: { params: { name: string } }
+  { params }: { params: Promise<{ name: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const body = await request.json();
     
     const client = await clientPromise;
     const db = client.db('leaf-to-forest');
-    const collection = db.collection(params.name);
+    const collection = db.collection(resolvedParams.name);
     
     // 添加创建时间和更新时间
     const document = {

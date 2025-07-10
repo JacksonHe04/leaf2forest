@@ -4,13 +4,14 @@ import { ObjectId } from 'mongodb';
 
 export async function PUT(
   request: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const resolvedParams = await params;
     const body = await request.json();
     const collection = await getCollection('recordings');
     const result = await collection.updateOne(
-      { _id: new ObjectId(params.id) },
+      { _id: new ObjectId(resolvedParams.id) },
       { $set: body }
     );
     if (result.matchedCount === 0) {
@@ -21,4 +22,4 @@ export async function PUT(
     console.error('更新录音失败:', error);
     return NextResponse.json({ error: '更新录音失败' }, { status: 500 });
   }
-} 
+}
