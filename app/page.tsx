@@ -12,7 +12,15 @@ export default async function Home() {
 
   return (
     <main className="container mx-auto px-4 py-8">
-      <h1 className="text-3xl font-bold mb-8">高中记忆录</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold">高中记忆录</h1>
+        <Link 
+          href="/admin" 
+          className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors"
+        >
+          数据库管理
+        </Link>
+      </div>
       
       {recordings.length === 0 ? (
         <div className="text-center py-12">
