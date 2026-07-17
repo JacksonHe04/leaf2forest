@@ -1,24 +1,379 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
+@custom-variant dark (&:is(.dark *));
+
+/* ============================================================
+   Leaf2Forest Design Tokens
+   ------------------------------------------------------------
+   Per CLAUDE.md §6: a single source of truth for color,
+   typography, radius, shadow. No page should redefine these.
+   ============================================================ */
 
 @theme inline {
+  /* Color aliases for Tailwind utility classes */
   --color-background: var(--background);
   --color-foreground: var(--foreground);
+
+  /* Leaf2Forest palette exposed as Tailwind colors */
+  --color-paper: var(--paper);
+  --color-paper-soft: var(--paper-soft);
+  --color-paper-deep: var(--paper-deep);
+  --color-ink: var(--ink);
+  --color-ink-soft: var(--ink-soft);
+  --color-ink-faint: var(--ink-faint);
+  --color-forest: var(--forest);
+  --color-forest-soft: var(--forest-soft);
+  --color-forest-deep: var(--forest-deep);
+  --color-gold: var(--gold);
+  --color-gold-soft: var(--gold-soft);
+
+  /* shadcn semantic tokens */
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  /* Sidebar tokens (kept for shadcn compatibility) */
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+
+  /* Fonts */
+  --font-sans: var(--font-noto-serif-sc), 'Noto Serif SC', 'Songti SC', 'Source Han Serif SC', Georgia, serif;
+  --font-serif: var(--font-cormorant), 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-heading: var(--font-cormorant), 'Cormorant Garamond', 'Playfair Display', Georgia, serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, monospace;
+
+  /* Radius — CLAUDE.md §6.5: 6 / 10 / 16 px (slight book feel) */
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-xl: 20px;
+  --radius-2xl: 24px;
+  /* shadcn base radius used by button/input/etc. */
+  --radius: 10px;
+
+  /* Paper shadow — CLAUDE.md §6.6 */
+  --shadow-paper: 0 4px 20px rgba(0, 0, 0, 0.05);
+  --shadow-paper-lg: 0 12px 40px rgba(0, 0, 0, 0.08);
+  --shadow-leaf: 0 2px 10px rgba(83, 101, 74, 0.08);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+/* ============================================================
+   Light theme — Archive Paper
+   ============================================================ */
+:root {
+  /* Leaf2Forest palette */
+  --paper: #F7F3EA;          /* Archive Paper — main bg */
+  --paper-soft: #FBF8F1;     /* lifted surface */
+  --paper-deep: #EFE9DA;     /* recessed surface */
+  --ink: #29251F;            /* Ink — main text */
+  --ink-soft: #4A4339;       /* secondary text */
+  --ink-faint: #8A8275;      /* tertiary text / captions */
+  --forest: #53654A;         /* Forest — accents, labels, icons */
+  --forest-soft: #6F8264;    /* hover state */
+  --forest-deep: #3E4B37;    /* pressed / strong */
+  --gold: #B79A62;           /* Antique Gold — time markers, dividers */
+  --gold-soft: #D4BE8E;      /* lighter gold */
+
+  /* shadcn semantic mapping */
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-soft);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-soft);
+  --popover-foreground: var(--ink);
+  --primary: var(--forest);
+  --primary-foreground: #FBF8F1;
+  --secondary: var(--paper-deep);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-faint);
+  --accent: var(--gold);
+  --accent-foreground: #FBF8F1;
+  --destructive: #B5453A;
+  --destructive-foreground: #FBF8F1;
+  --border: #E0D8C5;          /* warm paper edge */
+  --input: #E0D8C5;
+  --ring: var(--gold);
+  --chart-1: var(--forest);
+  --chart-2: var(--gold);
+  --chart-3: var(--forest-soft);
+  --chart-4: var(--gold-soft);
+  --chart-5: var(--ink-soft);
+
+  --sidebar: var(--paper-soft);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--forest);
+  --sidebar-primary-foreground: #FBF8F1;
+  --sidebar-accent: var(--paper-deep);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--gold);
+}
+
+/* Dark theme — Night Archive (optional, kept for next-themes compat) */
+.dark {
+  --paper: #1F1C18;
+  --paper-soft: #28241F;
+  --paper-deep: #161310;
+  --ink: #F2EBDB;
+  --ink-soft: #C9C0AC;
+  --ink-faint: #8E8675;
+  --forest: #8AA47C;
+  --forest-soft: #A4BC93;
+  --forest-deep: #6B7F5F;
+  --gold: #D4BE8E;
+  --gold-soft: #B79A62;
+
+  --background: var(--paper);
+  --foreground: var(--ink);
+  --card: var(--paper-soft);
+  --card-foreground: var(--ink);
+  --popover: var(--paper-soft);
+  --popover-foreground: var(--ink);
+  --primary: var(--forest);
+  --primary-foreground: #1F1C18;
+  --secondary: var(--paper-deep);
+  --secondary-foreground: var(--ink);
+  --muted: var(--paper-deep);
+  --muted-foreground: var(--ink-faint);
+  --accent: var(--gold);
+  --accent-foreground: #1F1C18;
+  --destructive: #D87E73;
+  --destructive-foreground: #1F1C18;
+  --border: #3A3328;
+  --input: #3A3328;
+  --ring: var(--gold);
+  --chart-1: var(--forest);
+  --chart-2: var(--gold);
+  --chart-3: var(--forest-soft);
+  --chart-4: var(--gold-soft);
+  --chart-5: var(--ink-soft);
+
+  --sidebar: var(--paper-soft);
+  --sidebar-foreground: var(--ink);
+  --sidebar-primary: var(--forest);
+  --sidebar-primary-foreground: #1F1C18;
+  --sidebar-accent: var(--paper-deep);
+  --sidebar-accent-foreground: var(--ink);
+  --sidebar-border: var(--border);
+  --sidebar-ring: var(--gold);
+}
+
+/* ============================================================
+   Base layer — typography rules per CLAUDE.md §6.4
+   ============================================================ */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  html {
+    @apply font-sans;
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    /* Body: serif, line-height 1.8 (CLAUDE.md §6.4) */
+    font-family: var(--font-sans);
+    line-height: 1.8;
+    /* Subtle paper grain so the surface never feels flat */
+    background-image:
+      radial-gradient(circle at 20% 10%, rgba(183, 154, 98, 0.04) 0%, transparent 40%),
+      radial-gradient(circle at 80% 80%, rgba(83, 101, 74, 0.04) 0%, transparent 45%);
+    background-attachment: fixed;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: 0.02em;
+    line-height: 1.25;
+    color: var(--ink);
+  }
+
+  ::selection {
+    background-color: rgba(183, 154, 98, 0.25);
+    color: var(--ink);
   }
 }
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Georgia, 'Times New Roman', Times, serif;
+/* ============================================================
+   Utility components — Leaf2Forest visual layer
+   ============================================================ */
+@layer components {
+  /* Paper surface — use for cards, panels, list rows */
+  .surface-paper {
+    background-color: var(--card);
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow-paper);
+  }
+
+  /* Hover lift for cards — CLAUDE.md §6.7 (slow, light, natural) */
+  .lift-paper {
+    transition: transform 400ms cubic-bezier(0.22, 1, 0.36, 1),
+                box-shadow 400ms cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .lift-paper:hover {
+    transform: translateY(-3px);
+    box-shadow: var(--shadow-paper-lg);
+  }
+
+  /* Gold rule — a thin horizontal divider with a centered diamond */
+  .gold-rule {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    color: var(--gold);
+  }
+  .gold-rule::before,
+  .gold-rule::after {
+    content: '';
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      var(--gold) 50%,
+      transparent 100%
+    );
+  }
+  .gold-rule-diamond {
+    width: 6px;
+    height: 6px;
+    transform: rotate(45deg);
+    background-color: var(--gold);
+    flex-shrink: 0;
+  }
+
+  /* Eyebrow label — small caps style label above headings */
+  .eyebrow {
+    font-family: var(--font-heading);
+    font-size: 0.75rem;
+    font-weight: 500;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--forest);
+  }
+
+  /* Display heading — for hero titles */
+  .display-heading {
+    font-family: var(--font-heading);
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    line-height: 1.1;
+  }
+
+  /* Body prose — long-form text blocks (transcription, bio, etc.) */
+  .prose-archive {
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.85;
+    color: var(--ink-soft);
+  }
+  .prose-archive p {
+    margin-bottom: 1.1em;
+  }
+
+  /* Subtle link — for inline links in archive prose */
+  .link-archive {
+    color: var(--forest);
+    text-decoration: underline;
+    text-decoration-color: var(--gold-soft);
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+    transition: color 200ms ease;
+  }
+  .link-archive:hover {
+    color: var(--forest-deep);
+    text-decoration-color: var(--gold);
+  }
+}
+
+/* ============================================================
+   Animations — keep gentle, no bounce (CLAUDE.md §6.7)
+   ============================================================ */
+@layer utilities {
+  @keyframes l2f-fade-up {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  @keyframes l2f-fade {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes l2f-wave {
+    0%, 100% { transform: scaleY(0.35); }
+    50% { transform: scaleY(1); }
+  }
+  @keyframes l2f-shimmer {
+    0% { background-position: -200% 0; }
+    100% { background-position: 200% 0; }
+  }
+
+  .animate-fade-up {
+    animation: l2f-fade-up 600ms cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .animate-fade {
+    animation: l2f-fade 500ms ease both;
+  }
+
+  /* Paper shimmer — for loading placeholders */
+  .shimmer-paper {
+    background: linear-gradient(
+      90deg,
+      var(--paper-deep) 0%,
+      var(--paper-soft) 50%,
+      var(--paper-deep) 100%
+    );
+    background-size: 200% 100%;
+    animation: l2f-shimmer 1.6s ease-in-out infinite;
+  }
+}
+
+/* Custom scrollbar — discreet, fits the archive feel */
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--paper-deep);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--gold-soft);
+  border-radius: 6px;
+  border: 2px solid var(--paper-deep);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--gold);
 }
