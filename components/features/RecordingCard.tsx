@@ -1,0 +1,162 @@
+"use client";
+
+import Link from "next/link";
+import { motion } from "framer-motion";
+import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import AudioPlayer from "./AudioPlayer";
+import type { Recording, Classmate } from "@/lib/db/types";
+import { cn } from "@/lib/utils";
+
+interface Props {
+  recording: Recording;
+  classmates: Classmate[];
+  /**
+   * Bytes in the recordings bucket. 0 ⇒ the local source was empty,
+   * we render an explicit "missing" tag instead of a silent player.
+   * null ⇒ unknown; player will ask the browser.
+   */
+  sizeBytes: number | null;
+  /** Optional index for staggered entrance animations. */
+  index?: number;
+  /** "archive" : default grid card. "row" : compact horizontal row (admin). */
+  variant?: "archive" | "row";
+}
+
+export default function RecordingCard({
+  recording,
+  classmates,
+  sizeBytes,
+  index = 0,
+  variant = "archive",
+}: Props) {
+  const url = `https://lugszrtwvninbduskick.supabase.co/storage/v1/object/public/recordings/${recording.audio_path}`;
+  const isEmpty = sizeBytes === 0;
+  const isLoading = sizeBytes == null;
+
+  const dateLabel = new Date(recording.date).toLocaleDateString("zh-CN", {
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+  });
+
+  if (variant === "row") {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.3) }}
+        className="surface-paper rounded-md p-4 lift-paper"
+      >
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center justify-between gap-3">
+            <Link
+              href={`/echoes/${recording.num}`}
+              className="font-serif text-base text-ink hover:text-forest transition-colors"
+            >
+              {recording.title}
+            </Link>
+            <span className="font-serif text-xs text-ink-faint whitespace-nowrap">
+              {dateLabel}
+            </span>
+          </div>
+          {(recording.description || recording.background) && (
+            <p className="font-serif text-sm text-ink-soft line-clamp-2">
+              {recording.description ?? recording.background}
+            </p>
+          )}
+          {!isEmpty && !isLoading && (
+            <AudioPlayer url={url} sizeBytes={sizeBytes} title={recording.title} />
+          )}
+        </div>
+      </motion.div>
+    );
+  }
+
+  return (
+    <motion.article
+      initial={{ opacity: 0, y: 14 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{
+        duration: 0.5,
+        delay: Math.min(index * 0.05, 0.4),
+        ease: [0.22, 1, 0.36, 1],
+      }}
+      className={cn(
+        "group relative surface-paper rounded-md lift-paper overflow-hidden",
+        isEmpty && "ring-1 ring-gold/40"
+      )}
+    >
+      {/* Top strip — date + location, like a card catalog header */}
+      <div className="flex items-center justify-between border-b border-border/70 bg-paper-deep/40 px-5 py-2.5">
+        <div className="flex items-center gap-1.5 font-serif text-xs text-ink-soft">
+          <Calendar className="h-3.5 w-3.5 text-gold" />
+          <span>{dateLabel}</span>
+          {recording.time && (
+            <>
+              <span className="text-gold">·</span>
+              <Clock className="h-3.5 w-3.5 text-gold" />
+              <span>{recording.time}</span>
+            </>
+          )}
+        </div>
+        {isEmpty && (
+          <span className="font-serif text-[10px] tracking-wider uppercase text-gold">
+            源文件缺失
+          </span>
+        )}
+      </div>
+
+      <div className="p-5">
+        <h3 className="display-heading text-xl text-ink leading-tight">
+          <Link
+            href={`/echoes/${recording.num}`}
+            className="transition-colors hover:text-forest"
+          >
+            {recording.title}
+          </Link>
+        </h3>
+
+        {(recording.description || recording.background) && (
+          <p className="mt-2 font-serif text-sm leading-7 text-ink-soft line-clamp-2">
+            {recording.description ?? recording.background}
+          </p>
+        )}
+
+        {/* Player */}
+        <div className="mt-4">
+          {isEmpty ? (
+            <div className="rounded-md border border-gold/40 bg-paper-deep/50 px-3 py-2 text-xs text-ink-faint font-serif">
+              源文件是 0 字节，跳过播放。
+            </div>
+          ) : isLoading ? (
+            <div className="h-10 rounded-md shimmer-paper" />
+          ) : (
+            <AudioPlayer
+              url={url}
+              sizeBytes={sizeBytes}
+              title={recording.title}
+            />
+          )}
+        </div>
+
+        {/* Footer — location + participants */}
+        {(recording.location || classmates.length > 0) && (
+          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
+            {recording.location && (
+              <span className="inline-flex items-center gap-1.5 font-serif text-xs text-ink-faint">
+                <MapPin className="h-3.5 w-3.5 text-forest" />
+                {recording.location}
+              </span>
+            )}
+            {classmates.length > 0 && (
+              <span className="inline-flex items-center gap-1.5 font-serif text-xs text-ink-faint">
+                <Users className="h-3.5 w-3.5 text-forest" />
+                {classmates.map((c) => c.name).join("、")}
+              </span>
+            )}
+          </div>
+        )}
+      </div>
+    </motion.article>
+  );
+}

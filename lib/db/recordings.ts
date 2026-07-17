@@ -38,6 +38,34 @@ export async function getRecording(id: string): Promise<Recording | null> {
   return (data ?? null) as Recording | null;
 }
 
+export async function getRecordingByNum(num: number): Promise<Recording | null> {
+  const { data, error } = await table()
+    .select('*')
+    .eq('num', num)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as Recording | null;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Resolve a recording by num first, then by uuid id (only when the segment
+ * is actually a uuid — otherwise PostgREST rejects the bad format).
+ */
+export async function getRecordingByIdOrNum(
+  raw: string
+): Promise<Recording | null> {
+  const n = Number(raw);
+  if (Number.isInteger(n) && n > 0) {
+    const byNum = await getRecordingByNum(n);
+    if (byNum) return byNum;
+  }
+  if (UUID_RE.test(raw)) return await getRecording(raw);
+  return null;
+}
+
 export async function createRecording(patch: RecordingPatch): Promise<Recording> {
   const { data, error } = await table()
     .insert(patch)

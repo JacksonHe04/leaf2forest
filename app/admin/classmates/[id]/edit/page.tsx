@@ -1,7 +1,14 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getClassmate } from '@/lib/db/classmates';
-import { getPublicUrl, BUCKET_IMAGES } from '@/lib/storage';
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
+import { getClassmateByIdOrUserId } from "@/lib/db/classmates";
+import { getPublicUrl, BUCKET_IMAGES } from "@/lib/storage";
+import ClassmateForm from "../../new/ClassmateForm";
+import { PageHeader } from "@/components/site/PageHeader";
+import { Button } from "@/components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -9,59 +16,58 @@ interface Props {
 
 export default async function EditClassmatePage({ params }: Props) {
   const { id } = await params;
-  const c = await getClassmate(id);
+  const c = await getClassmateByIdOrUserId(id);
   if (!c) notFound();
 
-  const fields: [string, string | null][] = [
-    ['姓名', c.name],
-    ['性别', c.gender],
-    ['出生日期', c.birth_date],
-    ['所在城市', c.city],
-    ['QQ', c.qq],
-    ['微信号', c.wechat],
-    ['电话', c.phone],
-    ['工作单位', c.employer],
-    ['行业', c.industry],
-    ['本科院校', c.bachelor_university],
-    ['本科专业', c.bachelor_major],
-    ['硕士院校', c.master_university],
-    ['硕士专业', c.master_major],
-    ['博士院校', c.doctor_university],
-    ['博士专业', c.doctor_major],
-    ['简介', c.bio],
-  ];
+  const avatarUrl = c.avatar_path
+    ? getPublicUrl(BUCKET_IMAGES, c.avatar_path)
+    : null;
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">同学：{c.name}</h1>
-          <Link href="/admin/classmates" className="text-gray-600">
-            ← 返回
-          </Link>
+    <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
+      <PageHeader
+        eyebrow={`Admin · Classmates · Edit`}
+        title={`编辑：${c.name}`}
+        subtitle="修改后点击保存即生效。带 * 的字段必填。"
+        breadcrumb={[
+          { label: "首页", href: "/" },
+          { label: "Admin", href: "/admin" },
+          { label: "Classmates", href: "/admin/classmates" },
+          { label: c.name },
+        ]}
+        actions={
+          <Button
+            variant="outline"
+            asChild
+            className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
+          >
+            <Link href="/admin/classmates">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              返回列表
+            </Link>
+          </Button>
+        }
+      />
+
+      {/* Current avatar preview (read-only; upload in form replaces it) */}
+      {avatarUrl && (
+        <div className="surface-paper rounded-md p-5 mb-6 flex items-center gap-4">
+          <Avatar className="h-14 w-14 rounded-full border border-gold/30">
+            <AvatarImage src={avatarUrl} alt={c.name} />
+            <AvatarFallback className="bg-paper-deep font-serif text-forest">
+              {c.name.slice(0, 1)}
+            </AvatarFallback>
+          </Avatar>
+          <div>
+            <div className="eyebrow">当前头像</div>
+            <p className="font-serif text-sm text-ink-soft">
+              如需更换，请在表单中选择新文件。
+            </p>
+          </div>
         </div>
-        <div className="bg-white shadow rounded-lg p-6 space-y-3">
-          {c.avatar_path && (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img
-              src={getPublicUrl(BUCKET_IMAGES, c.avatar_path)}
-              alt={c.name}
-              className="w-24 h-24 rounded-full object-cover mb-4"
-            />
-          )}
-          {fields
-            .filter(([, v]) => v)
-            .map(([k, v]) => (
-              <div key={k} className="flex">
-                <div className="w-32 text-gray-500 text-sm">{k}</div>
-                <div className="flex-1 text-sm whitespace-pre-wrap">{v}</div>
-              </div>
-            ))}
-        </div>
-        <p className="text-xs text-gray-500 mt-4">
-          后续会接入 inline 编辑表单。
-        </p>
-      </div>
-    </div>
+      )}
+
+      <ClassmateForm initial={c} />
+    </main>
   );
 }

@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from './supabase';
 import type { Classmate, ClassmatePatch } from './types';
+import { slugFromName } from '../slug';
 
 function table() {
   return getSupabaseAdmin().from('classmates');
@@ -9,6 +10,33 @@ export async function listClassmates(): Promise<Classmate[]> {
   const { data, error } = await table().select('*').order('name');
   if (error) throw error;
   return (data ?? []) as Classmate[];
+}
+
+export async function getClassmateByUserId(
+  userId: string
+): Promise<Classmate | null> {
+  const { data, error } = await table()
+    .select('*')
+    .eq('user_id', userId)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as Classmate | null;
+}
+
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Resolve a classmate by user_id first, then by uuid id (only when the
+ * segment is actually a uuid — otherwise PostgREST rejects the bad format).
+ */
+export async function getClassmateByIdOrUserId(
+  id: string
+): Promise<Classmate | null> {
+  const byUid = await getClassmateByUserId(id);
+  if (byUid) return byUid;
+  if (UUID_RE.test(id)) return await getClassmate(id);
+  return null;
 }
 
 export async function listClassmatesByIds(ids: string[]): Promise<Classmate[]> {
@@ -25,12 +53,37 @@ export async function getClassmate(id: string): Promise<Classmate | null> {
 }
 
 export async function createClassmate(patch: ClassmatePatch): Promise<Classmate> {
+  const finalPatch: ClassmatePatch = { ...patch };
+  if (!finalPatch.user_id && finalPatch.name) {
+    finalPatch.user_id = await uniqueUserId(slugFromName(finalPatch.name));
+  }
   const { data, error } = await table()
-    .insert(patch)
+    .insert(finalPatch)
     .select('*')
     .single();
   if (error) throw error;
   return data as Classmate;
+}
+
+/**
+ * Generate a user_id from a base slug, appending -2, -3 … on collision.
+ * Excludes `excludeId` so editing an existing classmate keeps its slug.
+ */
+export async function uniqueUserId(
+  base: string,
+  excludeId?: string
+): Promise<string> {
+  const { data, error } = await table().select('id, user_id');
+  if (error) throw error;
+  const taken = new Set(
+    (data ?? [])
+      .filter((r) => r.id !== excludeId && r.user_id)
+      .map((r) => r.user_id as string)
+  );
+  let candidate = base;
+  let n = 2;
+  while (taken.has(candidate)) candidate = `${base}${n++}`;
+  return candidate;
 }
 
 export async function updateClassmate(
