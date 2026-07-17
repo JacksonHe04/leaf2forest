@@ -23,8 +23,21 @@ import { LeafMotif } from "./LeafMotif";
  *
  * Admin nav items (管理) are only shown when isAdmin is true.
  */
-export function SiteHeader({ isAdmin = false }: { isAdmin?: boolean }) {
-  const navItems = isAdmin ? [...NAV_ITEMS, ...NAV_ITEMS_ADMIN] : NAV_ITEMS;
+export function SiteHeader({
+  isAdmin = false,
+  isLoggedIn = false,
+}: {
+  isAdmin?: boolean;
+  isLoggedIn?: boolean;
+}) {
+  const baseItems = isLoggedIn
+    ? NAV_ITEMS
+    : NAV_ITEMS.map((item) =>
+        item.href === "/mine"
+          ? { ...item, label: "登录", href: "/login", description: "登录后维护个人资料" }
+          : item
+      );
+  const navItems = isAdmin ? [...baseItems, ...NAV_ITEMS_ADMIN] : baseItems;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 

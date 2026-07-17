@@ -54,7 +54,7 @@ export default async function RootLayout({
     >
       <body className="min-h-screen flex flex-col antialiased">
         <Providers>
-          <SiteHeader isAdmin={isAdmin} />
+          <SiteHeader isAdmin={isAdmin} isLoggedIn={!!user} />
           <div className="flex-1">{children}</div>
           <SiteFooter isAdmin={isAdmin} />
         </Providers>
