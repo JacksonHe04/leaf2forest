@@ -6,25 +6,22 @@ import { Home, TreePine, Mic, User } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface BottomNavItem {
-  label: string;
   href: string;
   icon: React.ComponentType<{ className?: string }>;
 }
 
 const BASE_ITEMS: BottomNavItem[] = [
-  { label: "首页", href: "/", icon: Home },
-  { label: "Forest", href: "/forest", icon: TreePine },
-  { label: "Echoes", href: "/echoes", icon: Mic },
+  { href: "/", icon: Home },
+  { href: "/forest", icon: TreePine },
+  { href: "/echoes", icon: Mic },
 ];
 
 const LOGGED_IN_ITEM: BottomNavItem = {
-  label: "我的叶子",
   href: "/mine",
   icon: User,
 };
 
 const LOGGED_OUT_ITEM: BottomNavItem = {
-  label: "登录",
   href: "/login",
   icon: User,
 };
@@ -49,7 +46,7 @@ export function BottomNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
         "safe-bottom"
       )}
     >
-      <div className="flex items-center justify-around h-16">
+      <div className="flex items-center justify-around h-14">
         {items.map((item) => {
           const active = isActive(item.href);
           const Icon = item.icon;
@@ -58,14 +55,11 @@ export function BottomNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex flex-col items-center justify-center gap-0.5 flex-1 h-full transition-colors",
+                "flex items-center justify-center flex-1 h-full transition-colors",
                 active ? "text-forest" : "text-ink-faint hover:text-ink-soft"
               )}
             >
               <Icon className="h-5 w-5" />
-              <span className="text-[11px] font-serif leading-none">
-                {item.label}
-              </span>
             </Link>
           );
         })}

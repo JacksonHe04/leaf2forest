@@ -226,6 +226,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
               <th className={`sticky left-0 z-20 ${stickyBgHeader} px-2 py-1.5 font-serif text-xs text-ink-faint border-r border-border/40`} style={{ width: IDX_W }}>
                 #
               </th>
+              <th className="px-1 py-1.5" style={{ width: 0 }} />
               {groups.map((g) => {
                 const cols = DATA_COLUMNS.filter((c) => c.group === g);
                 return (
@@ -243,6 +244,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
               <th className={`sticky left-0 z-20 ${stickyBgHeader} px-2 py-2 font-serif text-xs text-ink-faint border-r border-border/40 tabular-nums`} style={{ width: IDX_W }}>
                 #
               </th>
+              <th className="px-1 py-2" style={{ width: 0 }} />
               {DATA_COLUMNS.map((col) => {
                 const isTitle = col.key === "title";
                 return (

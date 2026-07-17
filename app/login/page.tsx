@@ -1,9 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, User, ArrowLeft, AlertCircle } from "lucide-react";
+import { Lock, User, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -59,15 +58,7 @@ export default function LoginPage() {
 
   return (
     <main className="mx-auto max-w-md px-5 sm:px-8 py-12">
-      <Link
-        href="/"
-        className="group inline-flex items-center gap-1.5 font-serif text-sm text-ink-soft hover:text-forest transition-colors"
-      >
-        <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
-        返回首页
-      </Link>
-
-      <div className="mt-6 text-center">
+      <div className="text-center">
         <LeafMotif variant="mark" className="mx-auto h-8 w-8 text-forest" />
         <h1 className="mt-4 display-heading text-3xl text-ink">登录</h1>
         <p className="mt-2 font-serif text-sm text-ink-soft">

@@ -305,11 +305,11 @@ export function MineClient({ classmate }: Props) {
             {/* Contact */}
             <FormSection title="联系方式" eyebrow="02 / Contact">
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-                <Field label={LABELS.qq}>
+                <Field label={LABELS.phone}>
                   <Input
                     type="tel"
-                    value={values.qq}
-                    onChange={(e) => set("qq", e.target.value)}
+                    value={values.phone}
+                    onChange={(e) => set("phone", e.target.value)}
                     className="font-serif bg-paper border-border"
                   />
                 </Field>
@@ -320,31 +320,11 @@ export function MineClient({ classmate }: Props) {
                     className="font-serif bg-paper border-border"
                   />
                 </Field>
-                <Field label={LABELS.phone}>
+                <Field label={LABELS.qq}>
                   <Input
                     type="tel"
-                    value={values.phone}
-                    onChange={(e) => set("phone", e.target.value)}
-                    className="font-serif bg-paper border-border"
-                  />
-                </Field>
-              </div>
-            </FormSection>
-
-            {/* Work */}
-            <FormSection title="工作" eyebrow="03 / Work">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label={LABELS.employer}>
-                  <Input
-                    value={values.employer}
-                    onChange={(e) => set("employer", e.target.value)}
-                    className="font-serif bg-paper border-border"
-                  />
-                </Field>
-                <Field label={LABELS.industry}>
-                  <Input
-                    value={values.industry}
-                    onChange={(e) => set("industry", e.target.value)}
+                    value={values.qq}
+                    onChange={(e) => set("qq", e.target.value)}
                     className="font-serif bg-paper border-border"
                   />
                 </Field>
@@ -352,7 +332,7 @@ export function MineClient({ classmate }: Props) {
             </FormSection>
 
             {/* Education */}
-            <FormSection title="教育经历" eyebrow="04 / Education">
+            <FormSection title="教育经历" eyebrow="03 / Education">
               <div className="space-y-5">
                 {EDUCATION_GROUPS.map((group) => (
                   <div key={group.title} className="border-l-2 border-gold/40 pl-4">
@@ -370,6 +350,26 @@ export function MineClient({ classmate }: Props) {
                     </div>
                   </div>
                 ))}
+              </div>
+            </FormSection>
+
+            {/* Work */}
+            <FormSection title="工作" eyebrow="04 / Work">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <Field label={LABELS.employer}>
+                  <Input
+                    value={values.employer}
+                    onChange={(e) => set("employer", e.target.value)}
+                    className="font-serif bg-paper border-border"
+                  />
+                </Field>
+                <Field label={LABELS.industry}>
+                  <Input
+                    value={values.industry}
+                    onChange={(e) => set("industry", e.target.value)}
+                    className="font-serif bg-paper border-border"
+                  />
+                </Field>
               </div>
             </FormSection>
 
