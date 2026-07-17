@@ -5,14 +5,13 @@ import { motion } from "framer-motion";
 import {
   MapPin,
   Phone,
-  MessageCircle,
-  AtSign,
   GraduationCap,
   Briefcase,
   Mars,
   Venus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { WeChatIcon, QQIcon } from "./SocialIcons";
 import type { Classmate } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 
@@ -67,12 +66,12 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
     });
   if (classmate.wechat)
     contacts.push({
-      icon: <MessageCircle className="h-3 w-3" />,
+      icon: <WeChatIcon className="h-3.5 w-3.5" />,
       value: classmate.wechat,
     });
   if (classmate.qq)
     contacts.push({
-      icon: <AtSign className="h-3 w-3" />,
+      icon: <QQIcon className="h-3.5 w-3.5" />,
       value: classmate.qq,
     });
 
