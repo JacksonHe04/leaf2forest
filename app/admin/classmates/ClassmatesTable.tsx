@@ -49,6 +49,7 @@ const COLUMNS: ColDef[] = [
   },
   { key: "birth_date", label: "出生日期", width: "w-32", type: "date", group: "基本" },
   { key: "city", label: "城市", width: "w-24", type: "text", group: "基本" },
+  { key: "last_login_at", label: "最近登录", width: "w-36", group: "基本" },
   { key: "phone", label: "电话", width: "w-28", type: "text", group: "联系" },
   { key: "qq", label: "QQ", width: "w-24", type: "text", group: "联系" },
   { key: "wechat", label: "微信", width: "w-28", type: "text", group: "联系" },
@@ -100,6 +101,9 @@ export function ClassmatesTable({ initialClassmates }: Props) {
     (classmate: Classmate, key: string): string => {
       const val = (classmate as unknown as Record<string, unknown>)[key];
       if (val === null || val === undefined) return "";
+      if (key === "last_login_at" && typeof val === "string") {
+        return val.replace("T", " ").slice(0, 16);
+      }
       return String(val);
     },
     []

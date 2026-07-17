@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createSupabaseServerClient } from '@/lib/db/supabase-server';
 import { getClassmateByUserId } from '@/lib/db/classmates';
+import { getSupabaseAdmin } from '@/lib/db/supabase';
 
 export async function POST(request: Request) {
   try {
@@ -37,6 +38,12 @@ export async function POST(request: Request) {
         { status: 401 }
       );
     }
+
+    // Update last_login_at
+    await getSupabaseAdmin()
+      .from('classmates')
+      .update({ last_login_at: new Date().toISOString() })
+      .eq('id', classmate.id);
 
     return NextResponse.json({
       user: {
