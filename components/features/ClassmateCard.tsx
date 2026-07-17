@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import {
   MapPin,
   Phone,
@@ -76,11 +75,7 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
     });
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 10 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
-    >
+    <div>
       <Link
         href={`/forest/${classmate.user_id}`}
         className={cn(
@@ -169,6 +164,6 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
           </span>
         </div>
       </Link>
-    </motion.div>
+    </div>
   );
 }

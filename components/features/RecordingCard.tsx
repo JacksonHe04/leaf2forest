@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { motion } from "framer-motion";
 import { Calendar, Clock, MapPin, Users } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
 import type { Recording, Classmate } from "@/lib/db/types";
@@ -41,12 +40,7 @@ export default function RecordingCard({
 
   if (variant === "row") {
     return (
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.4, delay: Math.min(index * 0.03, 0.3) }}
-        className="surface-paper rounded-md p-4 lift-paper"
-      >
+      <div className="surface-paper rounded-md p-4 lift-paper">
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <Link
@@ -68,19 +62,12 @@ export default function RecordingCard({
             <AudioPlayer url={url} sizeBytes={sizeBytes} title={recording.title} />
           )}
         </div>
-      </motion.div>
+      </div>
     );
   }
 
   return (
-    <motion.article
-      initial={{ opacity: 0, y: 14 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.5,
-        delay: Math.min(index * 0.05, 0.4),
-        ease: [0.22, 1, 0.36, 1],
-      }}
+    <article
       className={cn(
         "group relative surface-paper rounded-md lift-paper overflow-hidden",
         isEmpty && "ring-1 ring-gold/40"
@@ -157,6 +144,6 @@ export default function RecordingCard({
           </div>
         )}
       </div>
-    </motion.article>
+    </article>
   );
 }
