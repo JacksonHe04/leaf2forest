@@ -1,10 +1,10 @@
-import { Users, Leaf } from "lucide-react";
+import { Leaf } from "lucide-react";
 import { listClassmates } from "@/lib/db/classmates";
 import { getPublicUrl, BUCKET_IMAGES } from "@/lib/storage";
-import { ClassmateCard } from "@/components/features/ClassmateCard";
 import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
+import { ForestClient } from "./ForestClient";
 
 export const dynamic = "force-dynamic";
 
@@ -12,12 +12,12 @@ export default async function ForestPage() {
   const classmates = await listClassmates();
 
   // Build avatar URLs once on the server.
-  const avatarUrls = new Map(
-    classmates.map((c) => [
-      c.id,
-      c.avatar_path ? getPublicUrl(BUCKET_IMAGES, c.avatar_path) : null,
-    ])
-  );
+  const avatarUrls: Record<string, string | null> = {};
+  for (const c of classmates) {
+    avatarUrls[c.id] = c.avatar_path
+      ? getPublicUrl(BUCKET_IMAGES, c.avatar_path)
+      : null;
+  }
 
   return (
     <main className="mx-auto max-w-6xl px-5 sm:px-8 py-12">
@@ -30,12 +30,6 @@ export default async function ForestPage() {
         }
         subtitle="六十多位同学，每一片叶子都在独立生长，共同构成这片森林。点击任意一张卡片，可以读到这位同学现在在哪里、正在做什么、从哪里出发。"
         breadcrumb={[{ label: "首页", href: "/" }, { label: "Forest" }]}
-        actions={
-          <div className="flex items-center gap-2 rounded-md border border-border bg-paper-soft px-3 py-1.5 font-serif text-sm text-ink-soft">
-            <Users className="h-4 w-4 text-forest" />
-            共 <span className="text-forest font-medium">{classmates.length}</span> 位
-          </div>
-        }
       />
 
       {classmates.length === 0 ? (
@@ -44,16 +38,11 @@ export default async function ForestPage() {
         </PageTransition>
       ) : (
         <PageTransition delay={0.05}>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-            {classmates.map((c, i) => (
-              <ClassmateCard
-                key={c.id}
-                classmate={c}
-                avatarUrl={avatarUrls.get(c.id) ?? null}
-                index={i}
-              />
-            ))}
-          </div>
+          <ForestClient
+            classmates={classmates}
+            avatarUrls={avatarUrls}
+            totalCount={classmates.length}
+          />
         </PageTransition>
       )}
     </main>

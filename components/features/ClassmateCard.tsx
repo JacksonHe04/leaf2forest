@@ -4,11 +4,13 @@ import Link from "next/link";
 import { motion } from "framer-motion";
 import {
   MapPin,
-  Briefcase,
-  GraduationCap,
   Phone,
   MessageCircle,
   AtSign,
+  GraduationCap,
+  Briefcase,
+  User,
+  UserRound,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Classmate } from "@/lib/db/types";
@@ -18,21 +20,27 @@ interface Props {
   classmate: Classmate;
   /** Image URL for the avatar; null when no avatar. */
   avatarUrl: string | null;
-  index?: number;
 }
 
 /**
- * ClassmateCard — a single specimen-page entry in the Forest directory.
+ * ClassmateCard — Forest directory specimen-page entry.
  *
- * Design intent: each classmate is a "leaf" pressed onto a paper card.
- * The card shows enough detail to recognize someone at a glance:
- * avatar, name, city, education, work, and contact hints.
- * Full details live on /forest/[id].
+ * Layout:
+ *  ┌─────────────────────────────────────┐
+ *  │ [avatar]   education (×3 max)       │
+ *  │  name      bio                       │
+ *  │            employer · industry       │
+ *  ├─────────────────────────────────────┤
+ *  │ 📍city    [contact icons]  [gender] │
+ *  └─────────────────────────────────────┘
+ *
+ * All cards share a fixed height so the grid stays uniform
+ * regardless of how much content each classmate has.
  */
-export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
+export function ClassmateCard({ classmate, avatarUrl }: Props) {
   const initials = classmate.name.slice(0, 1);
 
-  // Collect education entries (highest degree first)
+  // Education entries — highest degree first
   const eduEntries: { school: string; major: string }[] = [];
   if (classmate.doctor_university)
     eduEntries.push({
@@ -50,7 +58,7 @@ export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
       major: classmate.bachelor_major ?? "",
     });
 
-  // Contact methods
+  // Contact icons — only for non-empty fields
   const contacts: { icon: React.ReactNode; value: string }[] = [];
   if (classmate.phone)
     contacts.push({
@@ -68,131 +76,104 @@ export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
       value: classmate.qq,
     });
 
-  const hasMeta =
-    classmate.city ||
-    eduEntries.length > 0 ||
-    classmate.employer ||
-    classmate.industry ||
-    contacts.length > 0;
-
   return (
     <motion.div
-      initial={{ opacity: 0, y: 14 }}
+      initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      transition={{
-        duration: 0.5,
-        delay: Math.min(index * 0.04, 0.4),
-        ease: [0.22, 1, 0.36, 1],
-      }}
+      transition={{ duration: 0.4, ease: [0.22, 1, 0.36, 1] }}
     >
       <Link
         href={`/forest/${classmate.user_id}`}
         className={cn(
           "group block surface-paper rounded-md lift-paper overflow-hidden",
-          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"
+          "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60",
+          "h-[200px] flex flex-col"
         )}
       >
-        {/* Top: avatar centered, like a specimen label */}
-        <div className="flex flex-col items-center px-6 pt-7 pb-4">
-          <div className="relative">
-            <span
-              className="absolute -inset-1.5 rounded-full bg-gold/15 opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-              aria-hidden="true"
-            />
-            <Avatar className="relative h-20 w-20 rounded-full border border-gold/30 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
+        {/* ── Top section: info area ── */}
+        <div className="flex-1 grid grid-cols-[72px_1fr] gap-3 p-4">
+          {/* Left: avatar + name */}
+          <div className="flex flex-col items-center justify-center">
+            <Avatar className="h-14 w-14 rounded-full border border-gold/30 shadow-[0_2px_8px_rgba(0,0,0,0.06)]">
               {avatarUrl && (
                 <AvatarImage src={avatarUrl} alt={classmate.name} />
               )}
-              <AvatarFallback className="bg-paper-deep font-serif text-2xl text-forest">
+              <AvatarFallback className="bg-paper-deep font-serif text-lg text-forest">
                 {initials}
               </AvatarFallback>
             </Avatar>
+            <h3 className="mt-2 font-serif text-sm text-ink text-center leading-tight group-hover:text-forest transition-colors line-clamp-1">
+              {classmate.name}
+            </h3>
           </div>
 
-          <h3 className="mt-4 display-heading text-xl text-ink group-hover:text-forest transition-colors">
-            {classmate.name}
-          </h3>
-          {classmate.bio && (
-            <p className="mt-1.5 line-clamp-2 text-center font-serif text-xs leading-6 text-ink-faint">
-              {classmate.bio}
+          {/* Right: education, bio, work */}
+          <div className="flex flex-col gap-1 min-w-0 justify-center">
+            {eduEntries.map((edu) => (
+              <div
+                key={edu.school}
+                className="flex items-center gap-1.5 text-xs font-serif text-ink-soft min-w-0"
+              >
+                <GraduationCap className="h-3 w-3 text-forest shrink-0" />
+                <span className="truncate">
+                  {edu.major
+                    ? `${edu.school} · ${edu.major}`
+                    : edu.school}
+                </span>
+              </div>
+            ))}
+
+            <p className="text-xs font-serif text-ink-faint line-clamp-2 leading-5">
+              {classmate.bio || "还没有自我介绍哦"}
             </p>
-          )}
+
+            {(classmate.employer || classmate.industry) && (
+              <div className="flex items-center gap-1.5 text-xs font-serif text-ink-soft min-w-0">
+                <Briefcase className="h-3 w-3 text-forest shrink-0" />
+                <span className="truncate">
+                  {[classmate.employer, classmate.industry]
+                    .filter(Boolean)
+                    .join(" · ")}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
 
-        {/* Bottom: meta rows, like a herbarium label */}
-        <div className="border-t border-border/60 bg-paper-deep/30 px-6 py-3 space-y-1.5">
+        {/* ── Bottom bar: city · contacts · gender ── */}
+        <div className="border-t border-border/60 bg-paper-deep/30 px-4 py-2 flex items-center">
           {classmate.city && (
-            <MetaLine
-              icon={<MapPin className="h-3.5 w-3.5" />}
-              text={classmate.city}
-            />
-          )}
-
-          {eduEntries.map((edu) => (
-            <MetaLine
-              key={edu.school}
-              icon={<GraduationCap className="h-3.5 w-3.5" />}
-              text={edu.major ? `${edu.school} · ${edu.major}` : edu.school}
-            />
-          ))}
-
-          {(classmate.employer || classmate.industry) && (
-            <MetaLine
-              icon={<Briefcase className="h-3.5 w-3.5" />}
-              text={
-                [classmate.employer, classmate.industry]
-                  .filter(Boolean)
-                  .join(" · ") ?? ""
-              }
-            />
+            <span className="flex items-center gap-1 text-xs font-serif text-ink-soft shrink-0">
+              <MapPin className="h-3 w-3 text-forest" />
+              <span className="truncate max-w-[5rem]">{classmate.city}</span>
+            </span>
           )}
 
           {contacts.length > 0 && (
-            <div className="flex items-center gap-3 flex-wrap">
+            <span className="flex items-center gap-2 ml-2">
               {contacts.map((c, i) => (
                 <span
                   key={i}
-                  className="inline-flex items-center gap-1 text-[11px] font-serif text-ink-soft"
+                  className="text-forest/70"
                   title={c.value}
                 >
-                  <span className="text-forest">{c.icon}</span>
-                  <span className="truncate max-w-[5rem]">{c.value}</span>
+                  {c.icon}
                 </span>
               ))}
-            </div>
+            </span>
           )}
 
-          {!hasMeta && (
-            <MetaLine
-              icon={<span className="text-gold">·</span>}
-              text="资料待补充"
-              faint
-            />
+          {classmate.gender && (
+            <span className="ml-auto text-forest/50">
+              {classmate.gender === "male" ? (
+                <User className="h-3.5 w-3.5" />
+              ) : classmate.gender === "female" ? (
+                <UserRound className="h-3.5 w-3.5" />
+              ) : null}
+            </span>
           )}
         </div>
       </Link>
     </motion.div>
-  );
-}
-
-function MetaLine({
-  icon,
-  text,
-  faint,
-}: {
-  icon: React.ReactNode;
-  text: string;
-  faint?: boolean;
-}) {
-  return (
-    <div
-      className={cn(
-        "flex items-center gap-2 font-serif text-xs",
-        faint ? "text-ink-faint italic" : "text-ink-soft"
-      )}
-    >
-      <span className="text-forest shrink-0">{icon}</span>
-      <span className="truncate">{text}</span>
-    </div>
   );
 }
