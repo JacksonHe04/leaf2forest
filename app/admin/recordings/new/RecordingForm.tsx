@@ -97,7 +97,7 @@ export default function RecordingForm({ classmates, initial }: Props) {
       });
       const json = await res.json();
       if (json.status !== "success") throw new Error("保存失败");
-      router.push("/admin/recordings");
+      router.push("/admin");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "保存失败");

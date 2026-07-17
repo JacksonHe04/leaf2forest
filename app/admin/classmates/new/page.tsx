@@ -14,8 +14,7 @@ export default function NewClassmatePage() {
         breadcrumb={[
           { label: "首页", href: "/" },
           { label: "Admin", href: "/admin" },
-          { label: "Classmates", href: "/admin/classmates" },
-          { label: "新增" },
+          { label: "新增同学" },
         ]}
         actions={
           <Button
@@ -23,9 +22,9 @@ export default function NewClassmatePage() {
             asChild
             className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
           >
-            <Link href="/admin/classmates">
+            <Link href="/admin">
               <ArrowLeft className="h-3.5 w-3.5" />
-              返回列表
+              返回
             </Link>
           </Button>
         }

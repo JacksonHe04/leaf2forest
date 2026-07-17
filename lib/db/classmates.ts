@@ -10,8 +10,9 @@ function table() {
 /**
  * Compare two Chinese names by their pinyin spelling so that the list
  * follows alphabetical (A→Z) order rather than Unicode radical order.
+ * Exported for reuse (e.g. admin table client-side re-sort).
  */
-function compareByPinyin(a: string, b: string): number {
+export function compareByPinyin(a: string, b: string): number {
   const pa = pinyin(a, { toneType: 'none', type: 'array' }).join(' ').toLowerCase();
   const pb = pinyin(b, { toneType: 'none', type: 'array' }).join(' ').toLowerCase();
   if (pa < pb) return -1;

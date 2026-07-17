@@ -170,9 +170,9 @@ export function ClassmatesTable({ initialClassmates }: Props) {
 
   const groups = Array.from(new Set(COLUMNS.map((c) => c.group)));
 
-  /* ── Shared sticky bg classes ── */
-  const stickyBg = "bg-paper/95 backdrop-blur-sm";
-  const stickyBgHeader = "bg-paper-deep/95 backdrop-blur-sm";
+  /* ── Shared sticky bg classes (fully opaque to avoid see-through) ── */
+  const stickyBg = "bg-paper";
+  const stickyBgHeader = "bg-paper-deep";
 
   return (
     <div className="surface-paper rounded-md overflow-hidden">
@@ -319,29 +319,27 @@ export function ClassmatesTable({ initialClassmates }: Props) {
                     );
                   })}
 
-                  {/* Sticky right: preview */}
-                  <td className={`sticky right-0 z-10 ${stickyBg} px-1 py-1 border-l border-border/30 text-center`} style={{ width: ACT_W }}>
-                    <Link
-                      href={`/forest/${classmate.user_id}`}
-                      target="_blank"
-                      className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-forest hover:bg-forest/10 transition-colors"
-                      title="预览公开页"
-                    >
-                      <ExternalLink className="h-3.5 w-3.5" />
-                    </Link>
-                  </td>
-
-                  {/* Sticky right: delete */}
-                  <td className={`sticky z-10 ${stickyBg} px-1 py-1 border-l border-border/30 text-center`} style={{ width: ACT_W, right: ACT_W }}>
-                    <button
-                      type="button"
-                      onClick={() => handleDelete(classmate)}
-                      disabled={isDeleting}
-                      className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-red-500 hover:bg-red-50 transition-colors"
-                      title="删除"
-                    >
-                      {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
-                    </button>
+                  {/* Sticky right: preview + delete (combined to match header) */}
+                  <td className={`sticky right-0 z-10 ${stickyBg} px-1 py-1 border-l border-border/30 text-center`} style={{ width: ACT_W * 2 }}>
+                    <div className="flex items-center justify-center gap-0.5">
+                      <Link
+                        href={`/forest/${classmate.user_id}`}
+                        target="_blank"
+                        className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-forest hover:bg-forest/10 transition-colors"
+                        title="预览公开页"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </Link>
+                      <button
+                        type="button"
+                        onClick={() => handleDelete(classmate)}
+                        disabled={isDeleting}
+                        className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-red-500 hover:bg-red-50 transition-colors"
+                        title="删除"
+                      >
+                        {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
+                      </button>
+                    </div>
                   </td>
                 </tr>
               );

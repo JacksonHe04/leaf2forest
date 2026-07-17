@@ -128,7 +128,7 @@ export default function ClassmateForm({ initial }: Props) {
       });
       const json = await res.json();
       if (json.status !== "success") throw new Error("保存失败");
-      router.push("/admin/classmates");
+      router.push("/admin");
       router.refresh();
     } catch (e) {
       setError(e instanceof Error ? e.message : "保存失败");

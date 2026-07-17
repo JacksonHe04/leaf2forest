@@ -32,7 +32,6 @@ export default async function EditClassmatePage({ params }: Props) {
         breadcrumb={[
           { label: "首页", href: "/" },
           { label: "Admin", href: "/admin" },
-          { label: "Classmates", href: "/admin/classmates" },
           { label: c.name },
         ]}
         actions={
@@ -41,9 +40,9 @@ export default async function EditClassmatePage({ params }: Props) {
             asChild
             className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
           >
-            <Link href="/admin/classmates">
+            <Link href="/admin">
               <ArrowLeft className="h-3.5 w-3.5" />
-              返回列表
+              返回
             </Link>
           </Button>
         }
