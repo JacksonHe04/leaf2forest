@@ -23,7 +23,7 @@ export function SiteFooter() {
     : FOOTER_LINKS;
 
   return (
-    <footer className="mt-24 border-t border-border/70 bg-paper-soft">
+    <footer className="mt-24 border-t border-border/70 bg-paper-soft pb-16 md:pb-0">
       <div className="mx-auto max-w-6xl px-5 sm:px-8 py-12">
         <div className="grid grid-cols-1 md:grid-cols-12 gap-10">
           {/* Colophon */}
@@ -67,7 +67,7 @@ export function SiteFooter() {
         {/* Bottom rule */}
         <div className="mt-12 pt-6 border-t border-border/60 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <p className="font-serif text-xs text-ink-faint">
-            © {startYear}–{year} · {SITE.name} · 长期保存，慢慢生长。
+            © {startYear}–{year} · {SITE.name} · v{process.env.NEXT_PUBLIC_APP_VERSION} · 长期保存，慢慢生长。
           </p>
           <p className="font-serif text-xs text-ink-faint italic">
             “从叶子到森林”
