@@ -10,7 +10,7 @@ native/
 /local
 *_local/
 _satellites/
-.agents/
+.agents/native/
 .claude/
 .trae/
 .cursor/
