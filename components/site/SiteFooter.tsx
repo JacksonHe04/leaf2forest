@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { FOOTER_LINKS, SITE } from "@/lib/site";
+import { FOOTER_LINKS, FOOTER_LINKS_ADMIN, SITE } from "@/lib/site";
 import { LeafMotif } from "./LeafMotif";
 
 /**
@@ -8,10 +8,15 @@ import { LeafMotif } from "./LeafMotif";
  * Quiet, dated, and signed. No marketing, no newsletter signup,
  * no big CTA. Just the name, the year range, the school, and a
  * short list of links — like the imprint on the back of a book.
+ *
+ * Admin footer links (管理后台) are only shown when isAdmin is true.
  */
-export function SiteFooter() {
+export function SiteFooter({ isAdmin = false }: { isAdmin?: boolean }) {
   const year = new Date().getFullYear();
   const startYear = SITE.graduatingYear - 3; // 2019 入学
+  const footerLinks = isAdmin
+    ? [...FOOTER_LINKS, ...FOOTER_LINKS_ADMIN]
+    : FOOTER_LINKS;
 
   return (
     <footer className="mt-24 border-t border-border/70 bg-paper-soft">
@@ -35,7 +40,7 @@ export function SiteFooter() {
 
           {/* Link groups */}
           <div className="md:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
-            {FOOTER_LINKS.map((group) => (
+            {footerLinks.map((group) => (
               <div key={group.title}>
                 <h3 className="eyebrow mb-3">{group.title}</h3>
                 <ul className="space-y-2">

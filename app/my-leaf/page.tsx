@@ -1,81 +1,104 @@
 import Link from "next/link";
-import { Lock, Leaf, ArrowRight, BookOpen } from "lucide-react";
+import { redirect } from "next/navigation";
+import {
+  LogOut,
+  Key,
+  Leaf,
+  BookOpen,
+  ArrowRight,
+} from "lucide-react";
 import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
+import { getCurrentClassmate } from "@/lib/db/supabase-server";
 
 /**
- * My Leaf — placeholder for the classmate profile editor.
+ * My Leaf — the classmate's personal dashboard.
  *
- * Per CLAUDE.md §4.2, login exists so a classmate can maintain
- * their own information. Auth is not yet wired up (see /login),
- * so this page explains the intent and routes visitors to the
- * appropriate places.
+ * If not authenticated → redirect to /login.
+ * If authenticated → show profile summary and action links.
  */
 export default async function MyLeafPage() {
+  const classmate = await getCurrentClassmate();
+
+  if (!classmate) {
+    redirect("/login?redirect=/my-leaf");
+  }
+
   return (
     <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
       <PageHeader
         eyebrow="My Leaf · 我的叶子"
-        title="维护你自己的那片叶子"
-        subtitle="登录之后，你可以在这里编辑自己的个人信息、头像、个人介绍、学校与工作信息 —— 让二十年后回来的人，还能找到你。"
+        title={`${classmate.name}，你好`}
+        subtitle="这是你在 Leaf2Forest 的个人页面。你可以在这里管理自己的信息。"
         breadcrumb={[{ label: "首页", href: "/" }, { label: "我的叶子" }]}
       />
 
       <PageTransition>
+        {/* Profile card */}
         <div className="surface-paper rounded-md p-8 sm:p-10">
-          <div className="flex items-center gap-3">
-            <span className="flex h-11 w-11 items-center justify-center rounded-full bg-paper-deep text-gold">
-              <Lock className="h-5 w-5" />
-            </span>
+          <div className="flex items-center gap-4">
+            <div className="flex h-14 w-14 items-center justify-center rounded-full bg-forest/10 text-forest">
+              <Leaf className="h-6 w-6" />
+            </div>
             <div>
-              <h2 className="display-heading text-xl text-ink">
-                需要登录后访问
+              <h2 className="display-heading text-2xl text-ink">
+                {classmate.name}
               </h2>
-              <p className="font-serif text-sm text-ink-soft">
-                同学用户身份认证尚未启用。
+              <p className="font-serif text-sm text-ink-faint">
+                @{classmate.user_id}
               </p>
             </div>
           </div>
 
-          <p className="mt-6 font-serif text-ink-soft leading-7">
-            根据 CLAUDE.md，同学用户登录后可以：
-          </p>
-
-          <ul className="mt-4 space-y-2.5">
-            {[
-              "编辑自己的个人信息",
-              "修改头像",
-              "更新个人介绍",
-              "更新学校 / 工作信息",
-            ].map((item, i) => (
-              <li
-                key={i}
-                className="flex items-start gap-3 font-serif text-sm text-ink-soft"
-              >
-                <Leaf className="mt-1 h-3.5 w-3.5 shrink-0 text-forest" />
-                {item}
-              </li>
-            ))}
-          </ul>
-
-          <div className="mt-8 flex flex-wrap gap-3">
-            <Link
-              href="/login"
-              className="group inline-flex items-center gap-2 rounded-md bg-forest px-4 py-2.5 font-serif text-sm text-paper-soft hover:bg-forest-deep transition-colors"
-            >
-              <Lock className="h-3.5 w-3.5" />
-              前往登录
-              <ArrowRight className="h-3.5 w-3.5 transition-transform group-hover:translate-x-1" />
-            </Link>
-            <Link
-              href="/forest"
-              className="group inline-flex items-center gap-2 rounded-md border border-forest/40 bg-paper-soft px-4 py-2.5 font-serif text-sm text-forest hover:bg-paper-deep transition-colors"
-            >
-              <BookOpen className="h-3.5 w-3.5" />
-              先逛逛 Forest
-            </Link>
+          {/* Profile summary */}
+          <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {classmate.city && (
+              <InfoItem label="所在城市" value={classmate.city} />
+            )}
+            {classmate.employer && (
+              <InfoItem label="工作单位" value={classmate.employer} />
+            )}
+            {classmate.industry && (
+              <InfoItem label="所属行业" value={classmate.industry} />
+            )}
+            {classmate.bachelor_university && (
+              <InfoItem label="本科院校" value={classmate.bachelor_university} />
+            )}
+            {classmate.bachelor_major && (
+              <InfoItem label="本科专业" value={classmate.bachelor_major} />
+            )}
           </div>
+
+          {classmate.bio && (
+            <div className="mt-6">
+              <p className="eyebrow mb-2">个人介绍</p>
+              <p className="font-serif text-sm text-ink-soft leading-7">
+                {classmate.bio}
+              </p>
+            </div>
+          )}
+        </div>
+
+        {/* Actions */}
+        <div className="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <ActionCard
+            href={`/forest/${classmate.user_id}`}
+            icon={<BookOpen className="h-5 w-5" />}
+            title="查看我的档案"
+            description="在 Forest 中查看你的公开档案页"
+          />
+          <ActionCard
+            href="/change-password"
+            icon={<Key className="h-5 w-5" />}
+            title="修改密码"
+            description="修改你的登录密码"
+          />
+        </div>
+
+        {/* Logout */}
+        <div className="mt-8 flex justify-center">
+          <LogoutButton />
         </div>
 
         {/* Closing mark */}
@@ -87,5 +110,62 @@ export default async function MyLeafPage() {
         </p>
       </PageTransition>
     </main>
+  );
+}
+
+function InfoItem({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <p className="eyebrow mb-0.5">{label}</p>
+      <p className="font-serif text-sm text-ink-soft">{value}</p>
+    </div>
+  );
+}
+
+function ActionCard({
+  href,
+  icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ReactNode;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="group surface-paper rounded-md p-5 transition-all hover:shadow-paper"
+    >
+      <div className="flex items-start gap-3">
+        <span className="flex h-10 w-10 items-center justify-center rounded-full bg-paper-deep text-forest shrink-0">
+          {icon}
+        </span>
+        <div className="flex-1">
+          <h3 className="font-serif text-sm font-medium text-ink">
+            {title}
+          </h3>
+          <p className="mt-1 font-serif text-xs text-ink-faint">
+            {description}
+          </p>
+        </div>
+        <ArrowRight className="h-4 w-4 text-ink-faint transition-transform group-hover:translate-x-1" />
+      </div>
+    </Link>
+  );
+}
+
+function LogoutButton() {
+  return (
+    <form action="/api/auth/logout" method="POST">
+      <button
+        type="submit"
+        className="group inline-flex items-center gap-2 rounded-md border border-border px-4 py-2.5 font-serif text-sm text-ink-soft hover:text-red-600 hover:border-red-300 transition-colors"
+      >
+        <LogOut className="h-3.5 w-3.5" />
+        退出登录
+      </button>
+    </form>
   );
 }

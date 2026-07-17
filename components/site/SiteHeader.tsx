@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { NAV_ITEMS, SITE } from "@/lib/site";
+import { NAV_ITEMS, NAV_ITEMS_ADMIN, SITE } from "@/lib/site";
 import { LeafMotif } from "./LeafMotif";
 
 /**
@@ -20,8 +20,11 @@ import { LeafMotif } from "./LeafMotif";
  * acquires a border + shadow after the user scrolls. We keep it
  * understated because the archive should feel like a quiet library,
  * not a SaaS dashboard.
+ *
+ * Admin nav items (管理) are only shown when isAdmin is true.
  */
-export function SiteHeader() {
+export function SiteHeader({ isAdmin = false }: { isAdmin?: boolean }) {
+  const navItems = isAdmin ? [...NAV_ITEMS, ...NAV_ITEMS_ADMIN] : NAV_ITEMS;
   const pathname = usePathname();
   const [open, setOpen] = useState(false);
 
@@ -62,7 +65,7 @@ export function SiteHeader() {
 
           {/* Desktop nav */}
           <nav className="hidden md:flex items-center gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isActive(item.href);
               return (
                 <Link
@@ -105,7 +108,7 @@ export function SiteHeader() {
       {open && (
         <div className="md:hidden border-t border-border/70 bg-paper-soft animate-fade">
           <nav className="mx-auto max-w-6xl px-5 py-4 flex flex-col gap-1">
-            {NAV_ITEMS.map((item) => {
+            {navItems.map((item) => {
               const active = isActive(item.href);
               return (
                 <Link

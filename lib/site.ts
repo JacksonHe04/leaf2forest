@@ -24,12 +24,19 @@ export interface NavItem {
 /**
  * Primary navigation — surfaced in header (CLAUDE.md §5 信息架构).
  * Order matters; this is the canonical sequence.
+ * Admin-only items are in NAV_ITEMS_ADMIN.
  */
 export const NAV_ITEMS: NavItem[] = [
   { label: "首页", href: "/", description: "档案馆入口" },
   { label: "Forest", href: "/forest", description: "同学档案 · 一片森林" },
   { label: "Echoes", href: "/echoes", description: "声音档案 · 高中时期的回声" },
   { label: "我的叶子", href: "/my-leaf", description: "登录后维护个人资料" },
+];
+
+/**
+ * Admin-only navigation items — only shown to users with is_admin=true.
+ */
+export const NAV_ITEMS_ADMIN: NavItem[] = [
   { label: "管理", href: "/admin", description: "管理员后台" },
 ];
 
@@ -52,6 +59,12 @@ export const FOOTER_LINKS: { title: string; items: NavItem[] }[] = [
       { label: "我的叶子", href: "/my-leaf" },
     ],
   },
+];
+
+/**
+ * Admin-only footer links — only shown to users with is_admin=true.
+ */
+export const FOOTER_LINKS_ADMIN: { title: string; items: NavItem[] }[] = [
   {
     title: "维护",
     items: [{ label: "管理后台", href: "/admin" }],

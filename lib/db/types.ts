@@ -6,6 +6,8 @@ export interface Classmate {
   id: string;
   /** URL-safe pinyin of the name, e.g. "chenhao". Unique, used in /forest/[userId]. */
   user_id: string;
+  /** Whether this classmate has admin privileges. */
+  is_admin: boolean;
   name: string;
   avatar_path: string | null;
   gender: string | null;

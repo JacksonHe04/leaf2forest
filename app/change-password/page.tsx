@@ -2,8 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
-import { Lock, User, ArrowLeft, AlertCircle } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Lock, ArrowLeft, CheckCircle, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -11,46 +11,51 @@ import { LeafMotif } from "@/components/site/LeafMotif";
 import { SITE } from "@/lib/site";
 
 /**
- * Login page — authenticates via /api/auth/login.
+ * Change password page — authenticated users only.
  *
- * Username is the classmate's pinyin slug (e.g. "chenhao").
- * On success, redirects to the `redirect` query param or /my-leaf.
+ * Calls /api/auth/change-password to update the password.
  */
-export default function LoginPage() {
+export default function ChangePasswordPage() {
   const router = useRouter();
-  const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/my-leaf";
-
-  const [username, setUsername] = useState("");
-  const [password, setPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setSubmitting(true);
     setError("");
 
+    if (newPassword !== confirmPassword) {
+      setError("两次输入的密码不一致");
+      return;
+    }
+
+    if (newPassword.length < 6) {
+      setError("密码至少需要 6 个字符");
+      return;
+    }
+
+    setSubmitting(true);
+
     try {
-      const res = await fetch("/api/auth/login", {
+      const res = await fetch("/api/auth/change-password", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          username: username.trim(),
-          password,
-        }),
+        body: JSON.stringify({ newPassword }),
       });
 
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.error || "登录失败");
+        setError(data.error || "修改失败");
         setSubmitting(false);
         return;
       }
 
-      router.push(redirectTo);
-      router.refresh();
+      setSuccess(true);
+      setSubmitting(false);
     } catch {
       setError("网络错误，请稍后重试");
       setSubmitting(false);
@@ -60,18 +65,18 @@ export default function LoginPage() {
   return (
     <main className="mx-auto max-w-md px-5 sm:px-8 py-12">
       <Link
-        href="/"
+        href="/my-leaf"
         className="group inline-flex items-center gap-1.5 font-serif text-sm text-ink-soft hover:text-forest transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />
-        返回首页
+        返回我的叶子
       </Link>
 
       <div className="mt-6 text-center">
         <LeafMotif variant="mark" className="mx-auto h-8 w-8 text-forest" />
-        <h1 className="mt-4 display-heading text-3xl text-ink">登录</h1>
+        <h1 className="mt-4 display-heading text-3xl text-ink">修改密码</h1>
         <p className="mt-2 font-serif text-sm text-ink-soft">
-          使用你的拼音用户名登录，登录后可以维护自己的叶子。
+          修改你的登录密码。
         </p>
       </div>
 
@@ -88,55 +93,62 @@ export default function LoginPage() {
           </div>
         )}
 
+        {success && (
+          <div className="flex items-start gap-2 rounded-md border border-forest/30 bg-forest/5 px-3 py-2.5">
+            <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest" />
+            <p className="font-serif text-xs text-forest leading-6">
+              密码修改成功。
+            </p>
+          </div>
+        )}
+
         <div className="space-y-2">
-          <Label htmlFor="username" className="font-serif text-ink-soft">
-            用户名
+          <Label htmlFor="newPassword" className="font-serif text-ink-soft">
+            新密码
           </Label>
           <div className="relative">
-            <User className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
+            <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
             <Input
-              id="username"
-              type="text"
-              autoComplete="username"
+              id="newPassword"
+              type="password"
+              autoComplete="new-password"
               required
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
+              minLength={6}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
               className="pl-9 bg-paper border-border font-serif"
-              placeholder="例如：hejincheng"
+              placeholder="至少 6 个字符"
             />
           </div>
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="password" className="font-serif text-ink-soft">
-            密码
+          <Label htmlFor="confirmPassword" className="font-serif text-ink-soft">
+            确认新密码
           </Label>
           <div className="relative">
             <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
             <Input
-              id="password"
+              id="confirmPassword"
               type="password"
-              autoComplete="current-password"
+              autoComplete="new-password"
               required
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              minLength={6}
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               className="pl-9 bg-paper border-border font-serif"
-              placeholder="••••••"
+              placeholder="再输入一次"
             />
           </div>
         </div>
 
         <Button
           type="submit"
-          disabled={submitting}
+          disabled={submitting || success}
           className="w-full h-10 bg-forest hover:bg-forest-deep font-serif"
         >
-          {submitting ? "登录中…" : "登录"}
+          {submitting ? "提交中…" : "修改密码"}
         </Button>
-
-        <p className="text-center font-serif text-xs text-ink-faint">
-          初始密码为 123456，登录后请及时修改。
-        </p>
       </form>
 
       <p className="mt-6 text-center font-serif text-xs text-ink-faint">

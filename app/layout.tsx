@@ -3,6 +3,7 @@ import { Cormorant_Garamond, Noto_Serif_SC } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { getCurrentUser } from "@/lib/db/supabase-server";
 import "./globals.css";
 
 /**
@@ -37,11 +38,14 @@ export const metadata: Metadata = {
     "Leaf2Forest 是安徽省青阳中学 2019 级 2 班的数字档案馆 —— 记录每一位同学现在在哪里、正在做什么，以及那段共同的高中岁月里留下的声音。",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const user = await getCurrentUser();
+  const isAdmin = user?.user_metadata?.is_admin === true;
+
   return (
     <html
       lang="zh-CN"
@@ -50,9 +54,9 @@ export default function RootLayout({
     >
       <body className="min-h-screen flex flex-col antialiased">
         <Providers>
-          <SiteHeader />
+          <SiteHeader isAdmin={isAdmin} />
           <div className="flex-1">{children}</div>
-          <SiteFooter />
+          <SiteFooter isAdmin={isAdmin} />
         </Providers>
       </body>
     </html>
