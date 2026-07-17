@@ -45,7 +45,7 @@ interface ColDef {
 }
 
 const DATA_COLUMNS: ColDef[] = [
-  { key: "date", label: "日期", width: "w-28", type: "date", group: "基本信息", editable: true },
+  { key: "date", label: "日期", width: "w-40", type: "date", group: "基本信息", editable: true },
   { key: "time", label: "时间", width: "w-20", type: "time", group: "基本信息", editable: true },
   { key: "title", label: "标题", width: "w-36", type: "text", group: "基本信息", editable: true },
   { key: "location", label: "地点", width: "w-24", type: "text", group: "内容", editable: true },
@@ -115,6 +115,9 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
     (rec: Recording, key: string): string => {
       if (key === "classmates") return resolveClassmateNames(rec.classmates, classmates);
       if (key === "duration_seconds") return fmtDuration(rec.duration_seconds);
+      if (key === "date" && rec.date && rec.time) {
+        return `${rec.date} ${rec.time.slice(0, 5)}`;
+      }
       return getVal(rec, key);
     },
     [classmates]

@@ -15,9 +15,7 @@ export interface ListRecordingsOptions {
 export async function listRecordings(
   opts: ListRecordingsOptions = {}
 ): Promise<Recording[]> {
-  let q = table().select('*').order('date', { ascending: false }).order('time', {
-    ascending: false,
-  });
+  let q = table().select('*').order('num', { ascending: true });
 
   if (opts.classmateId) {
     // uuid[] contains
