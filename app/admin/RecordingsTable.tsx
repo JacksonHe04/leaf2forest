@@ -13,6 +13,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InlineAudioPlayer } from "./InlineAudioPlayer";
+import { ClassmateTagSelector } from "./ClassmateTagSelector";
 import type { Recording, Classmate } from "@/lib/db/types";
 
 /* ── Constants ── */
@@ -100,6 +101,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
   const [recordings, setRecordings] = useState(initialRecs);
   const [editing, setEditing] = useState<{ rowId: string; col: string } | null>(null);
   const [editValue, setEditValue] = useState("");
+  const [editClassmateIds, setEditClassmateIds] = useState<string[]>([]);
   const [statuses, setStatuses] = useState<Record<string, CellStatus>>({});
   const [deleting, setDeleting] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -158,14 +160,38 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
   function startEdit(rec: Recording, col: ColDef) {
     setEditing({ rowId: rec.id, col: col.key });
     if (col.key === "classmates") {
-      setEditValue(resolveClassmateNames(rec.classmates, classmates));
+      setEditClassmateIds(rec.classmates ?? []);
     } else {
       setEditValue(getVal(rec, col.key));
     }
   }
 
+  async function saveClassmates(rec: Recording, ids: string[]) {
+    const key = ck(rec.id, "classmates");
+    setStatuses((p) => ({ ...p, [key]: "saving" }));
+    try {
+      const res = await fetch(`/api/recordings/${rec.num}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ classmates: ids }),
+      });
+      const json = await res.json();
+      if (json.status !== "success") throw new Error("保存失败");
+      setRecordings((prev) =>
+        prev.map((r) => (r.id === rec.id ? { ...r, classmates: ids } : r))
+      );
+      setStatuses((p) => ({ ...p, [key]: "saved" }));
+      setTimeout(() => setStatuses((p) => { const n = { ...p }; delete n[key]; return n; }), 2000);
+    } catch {
+      setStatuses((p) => ({ ...p, [key]: "error" }));
+      setTimeout(() => setStatuses((p) => { const n = { ...p }; delete n[key]; return n; }), 3000);
+    }
+  }
+
   function commitEdit() {
     if (!editing) return;
+    // Classmates column is handled by ClassmateTagSelector onFinish
+    if (editing.col === "classmates") return;
     const rec = recordings.find((r) => r.id === editing.rowId);
     const col = DATA_COLUMNS.find((c) => c.key === editing.col);
     if (!rec || !col) return;
@@ -300,7 +326,24 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                         className={`${col.width} px-1 py-1 border-l border-border/15 ${isTitle ? `sticky z-10 ${stickyBg} border-r border-border/30 font-medium` : ""}`}
                         style={isTitle ? { left: IDX_W } : undefined}
                       >
-                        {isEditing && isEditable ? (
+                        {isEditing && isEditable && col.key === "classmates" ? (
+                          <ClassmateTagSelector
+                            value={editClassmateIds}
+                            allClassmates={classmates}
+                            onChange={setEditClassmateIds}
+                            onFinish={() => {
+                              const rec = recordings.find((r) => r.id === editing?.rowId);
+                              if (rec) {
+                                const origIds = rec.classmates ?? [];
+                                const newIds = editClassmateIds;
+                                if (JSON.stringify(origIds) !== JSON.stringify(newIds)) {
+                                  saveClassmates(rec, newIds);
+                                }
+                              }
+                              setEditing(null);
+                            }}
+                          />
+                        ) : isEditing && isEditable ? (
                           <Input
                             ref={inputRef}
                             value={editValue}
