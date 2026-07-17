@@ -1,24 +1,42 @@
-import Link from 'next/link';
-import { listClassmates } from '@/lib/db/classmates';
-import NewRecordingForm from './RecordingForm';
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import { listClassmates } from "@/lib/db/classmates";
+import NewRecordingForm from "./RecordingForm";
+import { PageHeader } from "@/components/site/PageHeader";
+import { Button } from "@/components/ui/button";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 export default async function NewRecordingPage() {
   const classmates = await listClassmates();
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">新增录音</h1>
-          <Link href="/admin/recordings" className="text-gray-600 hover:text-gray-900">
-            ← 返回
-          </Link>
-        </div>
-        <NewRecordingForm
-          classmates={classmates.map((c) => ({ id: c.id, name: c.name }))}
-        />
-      </div>
-    </div>
+    <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
+      <PageHeader
+        eyebrow="Admin · Recordings · New"
+        title="新增录音"
+        subtitle="为声音档案添加一段新条目。带 * 的字段必填。"
+        breadcrumb={[
+          { label: "首页", href: "/" },
+          { label: "Admin", href: "/admin" },
+          { label: "Recordings", href: "/admin/recordings" },
+          { label: "新增" },
+        ]}
+        actions={
+          <Button
+            variant="outline"
+            asChild
+            className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
+          >
+            <Link href="/admin/recordings">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              返回列表
+            </Link>
+          </Button>
+        }
+      />
+      <NewRecordingForm
+        classmates={classmates.map((c) => ({ id: c.id, name: c.name }))}
+      />
+    </main>
   );
 }

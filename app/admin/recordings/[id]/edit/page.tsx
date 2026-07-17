@@ -1,69 +1,85 @@
-import Link from 'next/link';
-import { notFound } from 'next/navigation';
-import { getRecording } from '@/lib/db/recordings';
-import { getPublicUrl, BUCKET_RECORDINGS } from '@/lib/storage';
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import { ArrowLeft, ExternalLink } from "lucide-react";
+import { getRecording } from "@/lib/db/recordings";
+import { listClassmates } from "@/lib/db/classmates";
+import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
+import RecordingForm from "../../new/RecordingForm";
+import { PageHeader } from "@/components/site/PageHeader";
+import { Button } from "@/components/ui/button";
 
-export const dynamic = 'force-dynamic';
+export const dynamic = "force-dynamic";
 
 interface Props {
   params: Promise<{ id: string }>;
 }
 
-/**
- * Read-only audit view that doubles as the "/edit" entry. Full edit form
- * is intentionally minimal here — extend as the workflow matures.
- */
 export default async function EditRecordingPage({ params }: Props) {
   const { id } = await params;
   const r = await getRecording(id);
   if (!r) notFound();
 
-  return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">查看录音</h1>
-          <Link href="/admin/recordings" className="text-gray-600">
-            ← 返回
-          </Link>
-        </div>
-        <div className="bg-white shadow rounded-lg p-6 space-y-3">
-          <Row k="标题" v={r.title} />
-          <Row k="日期 / 时间" v={`${r.date}${r.time ? ' ' + r.time : ''}`} />
-          {r.description && <Row k="描述" v={r.description} />}
-          {r.background && <Row k="背景" v={r.background} />}
-          {r.transcription && <Row k="转录" v={r.transcription} />}
-          {r.location && <Row k="地点" v={r.location} />}
-          <Row k="音频对象" v={r.audio_path} />
-          <Row
-            k="音频链接"
-            v={
-              <a
-                href={getPublicUrl(BUCKET_RECORDINGS, r.audio_path)}
-                target="_blank"
-                rel="noreferrer"
-                className="text-blue-600 break-all"
-              >
-                {getPublicUrl(BUCKET_RECORDINGS, r.audio_path)}
-              </a>
-            }
-          />
-          <Row k="关联同学数" v={String(r.classmates?.length ?? 0)} />
-        </div>
-        <p className="text-xs text-gray-500 mt-4">
-          需要就地编辑请走 <Link href="/admin/recordings" className="text-blue-600">管理列表</Link>；
-          后续会接入 inline 表单。
-        </p>
-      </div>
-    </div>
-  );
-}
+  const classmates = await listClassmates();
 
-function Row({ k, v }: { k: string; v: React.ReactNode }) {
   return (
-    <div className="flex">
-      <div className="w-32 text-gray-500 text-sm">{k}</div>
-      <div className="flex-1 text-sm whitespace-pre-wrap break-words">{v}</div>
-    </div>
+    <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
+      <PageHeader
+        eyebrow="Admin · Recordings · Edit"
+        title={`编辑：${r.title}`}
+        subtitle={`日期 ${r.date}${r.time ? ` ${r.time}` : ""} · 修改后点击保存即生效。`}
+        breadcrumb={[
+          { label: "首页", href: "/" },
+          { label: "Admin", href: "/admin" },
+          { label: "Recordings", href: "/admin/recordings" },
+          { label: r.title },
+        ]}
+        actions={
+          <>
+            <Button
+              variant="outline"
+              asChild
+              className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
+            >
+              <Link href="/admin/recordings">
+                <ArrowLeft className="h-3.5 w-3.5" />
+                返回列表
+              </Link>
+            </Button>
+            <Button
+              variant="outline"
+              asChild
+              className="font-serif border-gold/40 text-gold hover:bg-paper-deep"
+            >
+              <Link href={`/echoes/${r.id}`} target="_blank">
+                <ExternalLink className="h-3.5 w-3.5" />
+                在前台查看
+              </Link>
+            </Button>
+          </>
+        }
+      />
+
+      <RecordingForm
+        classmates={classmates.map((c) => ({ id: c.id, name: c.name }))}
+        initial={r}
+      />
+
+      {/* Object reference footer */}
+      <div className="mt-8 surface-paper rounded-md p-5">
+        <div className="eyebrow mb-2">音频对象</div>
+        <code className="font-serif text-xs text-ink-soft break-all block">
+          {r.audio_path}
+        </code>
+        <a
+          href={getPublicUrl(BUCKET_RECORDINGS, r.audio_path)}
+          target="_blank"
+          rel="noreferrer"
+          className="mt-2 inline-flex items-center gap-1 font-serif text-xs text-forest hover:text-forest-deep transition-colors link-archive"
+        >
+          <ExternalLink className="h-3 w-3" />
+          直接打开源文件
+        </a>
+      </div>
+    </main>
   );
 }

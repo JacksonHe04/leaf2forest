@@ -1,18 +1,36 @@
-import Link from 'next/link';
-import NewClassmateForm from './ClassmateForm';
+import Link from "next/link";
+import { ArrowLeft } from "lucide-react";
+import NewClassmateForm from "./ClassmateForm";
+import { PageHeader } from "@/components/site/PageHeader";
+import { Button } from "@/components/ui/button";
 
 export default function NewClassmatePage() {
   return (
-    <div className="min-h-screen bg-gray-50">
-      <div className="container mx-auto px-4 py-8 max-w-3xl">
-        <div className="flex justify-between items-center mb-6">
-          <h1 className="text-2xl font-bold">新增同学</h1>
-          <Link href="/admin/classmates" className="text-gray-600 hover:text-gray-900">
-            ← 返回
-          </Link>
-        </div>
-        <NewClassmateForm />
-      </div>
-    </div>
+    <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
+      <PageHeader
+        eyebrow="Admin · Classmates · New"
+        title="新增同学"
+        subtitle="为森林添一片新叶子。带 * 的字段必填。"
+        breadcrumb={[
+          { label: "首页", href: "/" },
+          { label: "Admin", href: "/admin" },
+          { label: "Classmates", href: "/admin/classmates" },
+          { label: "新增" },
+        ]}
+        actions={
+          <Button
+            variant="outline"
+            asChild
+            className="font-serif border-forest/40 text-forest hover:bg-paper-deep"
+          >
+            <Link href="/admin/classmates">
+              <ArrowLeft className="h-3.5 w-3.5" />
+              返回列表
+            </Link>
+          </Button>
+        }
+      />
+      <NewClassmateForm />
+    </main>
   );
 }
