@@ -1,8 +1,9 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond, Noto_Serif_SC } from "next/font/google";
 import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
+import { BottomNav } from "@/components/site/BottomNav";
 import { getCurrentUser } from "@/lib/db/supabase-server";
 import "./globals.css";
 
@@ -38,6 +39,12 @@ export const metadata: Metadata = {
     "Leaf2Forest 是安徽省青阳中学 2019 级 2 班的数字档案馆 —— 记录每一位同学现在在哪里、正在做什么，以及那段共同的高中岁月里留下的声音。",
 };
 
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+};
+
 export default async function RootLayout({
   children,
 }: Readonly<{
@@ -55,8 +62,9 @@ export default async function RootLayout({
       <body className="min-h-screen flex flex-col antialiased">
         <Providers>
           <SiteHeader isAdmin={isAdmin} isLoggedIn={!!user} />
-          <div className="flex-1">{children}</div>
+          <div className="flex-1 pb-20 md:pb-0">{children}</div>
           <SiteFooter isAdmin={isAdmin} />
+          <BottomNav isLoggedIn={!!user} />
         </Providers>
       </body>
     </html>

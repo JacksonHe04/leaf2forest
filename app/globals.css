@@ -359,6 +359,11 @@
     background-size: 200% 100%;
     animation: l2f-shimmer 1.6s ease-in-out infinite;
   }
+
+  /* Safe area bottom padding — for fixed bottom bars on iOS */
+  .safe-bottom {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
 }
 
 /* Custom scrollbar — discreet, fits the archive feel */

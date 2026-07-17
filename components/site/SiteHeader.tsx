@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useState } from "react";
-import { Menu, X } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, NAV_ITEMS_ADMIN, SITE } from "@/lib/site";
 import { LeafMotif } from "./LeafMotif";
@@ -13,14 +11,9 @@ import { LeafMotif } from "./LeafMotif";
  *
  * Layout:
  *  - Left: Leaf2Forest wordmark (leaf motif + serif name)
- *  - Center/Right: primary nav items
- *  - Mobile: hamburger opens a full-width sheet-style drawer
+ *  - Right: primary nav items (desktop only)
  *
- * The header is translucent over the paper background and only
- * acquires a border + shadow after the user scrolls. We keep it
- * understated because the archive should feel like a quiet library,
- * not a SaaS dashboard.
- *
+ * Mobile navigation is handled by the BottomNav component.
  * Admin nav items (管理) are only shown when isAdmin is true.
  */
 export function SiteHeader({
@@ -39,7 +32,6 @@ export function SiteHeader({
       );
   const navItems = isAdmin ? [...baseItems, ...NAV_ITEMS_ADMIN] : baseItems;
   const pathname = usePathname();
-  const [open, setOpen] = useState(false);
 
   const isActive = (href: string) => {
     if (href === "/") return pathname === "/";
@@ -102,51 +94,8 @@ export function SiteHeader({
               );
             })}
           </nav>
-
-          {/* Mobile toggle */}
-          <button
-            type="button"
-            onClick={() => setOpen((v) => !v)}
-            className="md:hidden inline-flex h-9 w-9 items-center justify-center rounded-md text-ink-soft hover:bg-paper-deep hover:text-forest transition-colors"
-            aria-label={open ? "关闭菜单" : "打开菜单"}
-            aria-expanded={open}
-          >
-            {open ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
-          </button>
         </div>
       </div>
-
-      {/* Mobile drawer — inline panel rather than a Radix Sheet so the
-          archive feel stays consistent (no overlay scrim, just paper). */}
-      {open && (
-        <div className="md:hidden border-t border-border/70 bg-paper-soft animate-fade">
-          <nav className="mx-auto max-w-6xl px-5 py-4 flex flex-col gap-1">
-            {navItems.map((item) => {
-              const active = isActive(item.href);
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  onClick={() => setOpen(false)}
-                  className={cn(
-                    "flex flex-col px-3 py-3 rounded-md transition-colors",
-                    active
-                      ? "bg-paper-deep text-forest"
-                      : "text-ink-soft hover:bg-paper-deep/60 hover:text-forest"
-                  )}
-                >
-                  <span className="font-serif text-base">{item.label}</span>
-                  {item.description && (
-                    <span className="mt-0.5 text-xs text-ink-faint">
-                      {item.description}
-                    </span>
-                  )}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      )}
     </header>
   );
 }
