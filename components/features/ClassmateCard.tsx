@@ -9,8 +9,8 @@ import {
   AtSign,
   GraduationCap,
   Briefcase,
-  User,
-  UserRound,
+  Mars,
+  Venus,
 } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Classmate } from "@/lib/db/types";
@@ -40,22 +40,22 @@ interface Props {
 export function ClassmateCard({ classmate, avatarUrl }: Props) {
   const initials = classmate.name.slice(0, 1);
 
-  // Education entries — highest degree first
+  // Education entries — bachelor → master → doctor (ascending)
   const eduEntries: { school: string; major: string }[] = [];
-  if (classmate.doctor_university)
+  if (classmate.bachelor_university)
     eduEntries.push({
-      school: classmate.doctor_university,
-      major: classmate.doctor_major ?? "",
+      school: classmate.bachelor_university,
+      major: classmate.bachelor_major ?? "",
     });
   if (classmate.master_university)
     eduEntries.push({
       school: classmate.master_university,
       major: classmate.master_major ?? "",
     });
-  if (classmate.bachelor_university)
+  if (classmate.doctor_university)
     eduEntries.push({
-      school: classmate.bachelor_university,
-      major: classmate.bachelor_major ?? "",
+      school: classmate.doctor_university,
+      major: classmate.doctor_major ?? "",
     });
 
   // Contact icons — only for non-empty fields
@@ -110,16 +110,16 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
           {/* Right: education, bio, work */}
           <div className="flex flex-col gap-1 min-w-0 justify-center">
             {eduEntries.map((edu) => (
-              <div
-                key={edu.school}
-                className="flex items-center gap-1.5 text-xs font-serif text-ink-soft min-w-0"
-              >
-                <GraduationCap className="h-3 w-3 text-forest shrink-0" />
-                <span className="truncate">
-                  {edu.major
-                    ? `${edu.school} · ${edu.major}`
-                    : edu.school}
-                </span>
+              <div key={edu.school} className="min-w-0">
+                <div className="flex items-center gap-1.5 text-xs font-serif text-ink-soft">
+                  <GraduationCap className="h-3 w-3 text-forest shrink-0" />
+                  <span className="truncate">{edu.school}</span>
+                </div>
+                {edu.major && (
+                  <p className="text-[11px] font-serif text-ink-faint truncate pl-[18px]">
+                    {edu.major}
+                  </p>
+                )}
               </div>
             ))}
 
@@ -140,7 +140,7 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
           </div>
         </div>
 
-        {/* ── Bottom bar: city · contacts · gender ── */}
+        {/* ── Bottom bar: city ··· contacts · gender ── */}
         <div className="border-t border-border/60 bg-paper-deep/30 px-4 py-2 flex items-center">
           {classmate.city && (
             <span className="flex items-center gap-1 text-xs font-serif text-ink-soft shrink-0">
@@ -149,9 +149,9 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
             </span>
           )}
 
-          {contacts.length > 0 && (
-            <span className="flex items-center gap-2 ml-2">
-              {contacts.map((c, i) => (
+          <span className="ml-auto flex items-center gap-2">
+            {contacts.length > 0 &&
+              contacts.map((c, i) => (
                 <span
                   key={i}
                   className="text-forest/70"
@@ -160,18 +160,14 @@ export function ClassmateCard({ classmate, avatarUrl }: Props) {
                   {c.icon}
                 </span>
               ))}
-            </span>
-          )}
 
-          {classmate.gender && (
-            <span className="ml-auto text-forest/50">
-              {classmate.gender === "male" ? (
-                <User className="h-3.5 w-3.5" />
+            {classmate.gender &&
+              (classmate.gender === "male" ? (
+                <Mars className="h-3.5 w-3.5 text-forest/50" />
               ) : classmate.gender === "female" ? (
-                <UserRound className="h-3.5 w-3.5" />
-              ) : null}
-            </span>
-          )}
+                <Venus className="h-3.5 w-3.5 text-forest/50" />
+              ) : null)}
+          </span>
         </div>
       </Link>
     </motion.div>

@@ -23,12 +23,15 @@ interface Props {
   totalCount: number;
 }
 
+/** Cities pinned to the top of the group list for prominence. */
+const PINNED_CITIES = ["北京", "上海", "杭州", "合肥", "南京", "深圳"];
+
 export function ForestClient({
   classmates,
   avatarUrls,
   totalCount,
 }: Props) {
-  const [groupBy, setGroupBy] = useState<"none" | "city" | "industry">("none");
+  const [groupBy, setGroupBy] = useState<"none" | "city" | "industry">("city");
 
   const groups = useMemo<Group[]>(() => {
     if (groupBy === "none") return [];
@@ -43,8 +46,19 @@ export function ForestClient({
 
     return Array.from(map.entries())
       .sort(([a], [b]) => {
+        // "未知" always last
         if (a === "未知") return 1;
         if (b === "未知") return -1;
+
+        // When grouping by city, honour the pinned-city order
+        if (groupBy === "city") {
+          const ai = PINNED_CITIES.indexOf(a);
+          const bi = PINNED_CITIES.indexOf(b);
+          if (ai !== -1 && bi !== -1) return ai - bi;
+          if (ai !== -1) return -1;
+          if (bi !== -1) return 1;
+        }
+
         return a.localeCompare(b, "zh-CN");
       })
       .map(([name, members]) => ({ name, classmates: members }));
