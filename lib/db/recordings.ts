@@ -6,7 +6,8 @@ function table() {
 }
 
 export interface ListRecordingsOptions {
-  classmateId?: string;
+  /** Filter recordings whose `people` array contains this UUID (classmate or teacher). */
+  peopleId?: string;
   from?: string; // YYYY-MM-DD inclusive
   to?: string; // YYYY-MM-DD inclusive
   limit?: number;
@@ -17,9 +18,9 @@ export async function listRecordings(
 ): Promise<Recording[]> {
   let q = table().select('*').order('num', { ascending: true });
 
-  if (opts.classmateId) {
+  if (opts.peopleId) {
     // uuid[] contains
-    q = q.contains('classmates', [opts.classmateId]);
+    q = q.contains('people', [opts.peopleId]);
   }
   if (opts.from) q = q.gte('date', opts.from);
   if (opts.to) q = q.lte('date', opts.to);

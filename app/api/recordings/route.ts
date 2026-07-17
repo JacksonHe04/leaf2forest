@@ -32,7 +32,7 @@ export async function POST(request: Request) {
     }
     const created = await createRecording({
       ...body,
-      classmates: body.classmates ?? [],
+      people: body.people ?? [],
     } satisfies RecordingPatch);
     return NextResponse.json({ status: 'success', data: created });
   } catch (error) {

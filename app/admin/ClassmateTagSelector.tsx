@@ -2,14 +2,27 @@
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
 import { X } from "lucide-react";
-import type { Classmate } from "@/lib/db/types";
+import type { Classmate, Teacher } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 
+/** Unified item for display in the selector. */
+interface SelectorItem {
+  id: string;
+  name: string;
+  kind: "classmate" | "teacher";
+  /** Only for classmates */
+  city?: string | null;
+  /** Only for teachers */
+  subject?: string;
+}
+
 interface Props {
-  /** Currently selected classmate UUIDs */
+  /** Currently selected UUIDs (classmates + teachers) */
   value: string[];
   /** Full list of classmates (pre-loaded) */
   allClassmates: Classmate[];
+  /** Full list of teachers (pre-loaded) */
+  allTeachers: Teacher[];
   /** Called when selection changes */
   onChange: (ids: string[]) => void;
   /** Called when user wants to commit (blur/enter on empty) */
@@ -17,15 +30,16 @@ interface Props {
 }
 
 /**
- * ClassmateTagSelector — search + tag multi-select for classmates.
+ * ClassmateTagSelector — search + tag multi-select for classmates and teachers.
  *
- * Shows selected classmates as removable tags. Typing in the input
+ * Shows selected people as removable tags. Typing in the input
  * filters the dropdown by name match. Arrow keys navigate, Enter
  * selects, Backspace on empty removes the last tag.
  */
 export function ClassmateTagSelector({
   value,
   allClassmates,
+  allTeachers,
   onChange,
   onFinish,
 }: Props) {
@@ -36,10 +50,27 @@ export function ClassmateTagSelector({
   const listRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
-  // Build ID→name map once
+  // Merge classmates + teachers into a unified list
+  const allItems = useMemo<SelectorItem[]>(() => {
+    const classmates: SelectorItem[] = allClassmates.map((c) => ({
+      id: c.id,
+      name: c.name,
+      kind: "classmate" as const,
+      city: c.city,
+    }));
+    const teachers: SelectorItem[] = allTeachers.map((t) => ({
+      id: t.id,
+      name: t.name,
+      kind: "teacher" as const,
+      subject: t.subject,
+    }));
+    return [...classmates, ...teachers];
+  }, [allClassmates, allTeachers]);
+
+  // Build ID→item map once
   const idMap = useMemo(
-    () => new Map(allClassmates.map((c) => [c.id, c])),
-    [allClassmates]
+    () => new Map(allItems.map((c) => [c.id, c])),
+    [allItems]
   );
 
   // Filter candidates: exclude already-selected, match query
@@ -47,10 +78,10 @@ export function ClassmateTagSelector({
     const selected = new Set(value);
     const q = query.trim().toLowerCase();
     const filtered = q
-      ? allClassmates.filter((c) => c.name.toLowerCase().includes(q))
-      : allClassmates;
+      ? allItems.filter((c) => c.name.toLowerCase().includes(q))
+      : allItems;
     return filtered.filter((c) => !selected.has(c.id));
-  }, [allClassmates, value, query]);
+  }, [allItems, value, query]);
 
   // Reset active index when candidates change
   useEffect(() => {
@@ -115,7 +146,7 @@ export function ClassmateTagSelector({
     }
   }
 
-  const selectedClassmates = value.map((id) => idMap.get(id)).filter(Boolean) as Classmate[];
+  const selectedItems = value.map((id) => idMap.get(id)).filter(Boolean) as SelectorItem[];
 
   return (
     <div ref={containerRef} className="relative">
@@ -130,17 +161,25 @@ export function ClassmateTagSelector({
         }}
       >
         {/* Selected tags */}
-        {selectedClassmates.map((c) => (
+        {selectedItems.map((item) => (
           <span
-            key={c.id}
-            className="inline-flex items-center gap-0.5 rounded bg-forest/10 px-1.5 py-0.5 font-serif text-[11px] text-forest whitespace-nowrap"
+            key={item.id}
+            className={cn(
+              "inline-flex items-center gap-0.5 rounded px-1.5 py-0.5 font-serif text-[11px] whitespace-nowrap",
+              item.kind === "teacher"
+                ? "bg-gold/10 text-gold"
+                : "bg-forest/10 text-forest"
+            )}
           >
-            {c.name}
+            {item.name}
+            {item.kind === "teacher" && item.subject && (
+              <span className="text-[10px] opacity-60">{item.subject}</span>
+            )}
             <button
               type="button"
               onClick={(e) => {
                 e.stopPropagation();
-                removeId(c.id);
+                removeId(item.id);
               }}
               className="ml-0.5 hover:text-red-500 transition-colors"
             >
@@ -160,7 +199,7 @@ export function ClassmateTagSelector({
           onFocus={() => setOpen(true)}
           onKeyDown={onKey}
           className="flex-1 min-w-[60px] bg-transparent font-serif text-xs text-ink outline-none placeholder:text-ink-faint/60"
-          placeholder={selectedClassmates.length > 0 ? "继续添加…" : "搜索同学…"}
+          placeholder={selectedItems.length > 0 ? "继续添加…" : "搜索同学或老师…"}
         />
       </div>
 
@@ -170,24 +209,27 @@ export function ClassmateTagSelector({
           ref={listRef}
           className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-y-auto rounded border border-border bg-paper shadow-lg"
         >
-          {candidates.map((c, i) => (
+          {candidates.map((item, i) => (
             <div
-              key={c.id}
+              key={item.id}
               onMouseDown={(e) => {
                 e.preventDefault();
-                addId(c.id);
+                addId(item.id);
               }}
               onMouseEnter={() => setActiveIdx(i)}
               className={cn(
-                "px-3 py-1.5 font-serif text-xs cursor-pointer transition-colors",
+                "px-3 py-1.5 font-serif text-xs cursor-pointer transition-colors flex items-center gap-2",
                 i === activeIdx
                   ? "bg-forest/10 text-forest"
                   : "text-ink-soft hover:bg-paper-deep/60"
               )}
             >
-              {c.name}
-              {c.city && (
-                <span className="ml-2 text-ink-faint/60 text-[10px]">{c.city}</span>
+              <span>{item.name}</span>
+              {item.kind === "teacher" && item.subject && (
+                <span className="text-ink-faint/60 text-[10px]">老师 · {item.subject}</span>
+              )}
+              {item.kind === "classmate" && item.city && (
+                <span className="text-ink-faint/60 text-[10px]">{item.city}</span>
               )}
             </div>
           ))}

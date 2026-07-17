@@ -1,29 +1,22 @@
 import { Mic } from "lucide-react";
 import { listRecordings } from "@/lib/db/recordings";
-import { listClassmatesByIds } from "@/lib/db/classmates";
+import { buildPeopleMap } from "@/lib/db/people";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { BUCKET_RECORDINGS } from "@/lib/storage";
-import type { Classmate } from "@/lib/db/types";
+import type { Person } from "@/lib/db/types";
 import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { EchoesClient } from "./EchoesClient";
 
 export const revalidate = 60;
 
-type ClassmateMap = Record<string, Classmate>;
-
-async function resolveClassmates(groups: string[][]): Promise<ClassmateMap> {
-  const allIds = new Set<string>();
-  for (const ids of groups) ids.forEach((id) => allIds.add(id));
-  const list = await listClassmatesByIds([...allIds]);
-  return Object.fromEntries(list.map((c) => [c.id, c]));
-}
+type PeopleMap = Record<string, Person>;
 
 export default async function EchoesPage() {
   const recordings = await listRecordings();
 
-  const classmateMap = await resolveClassmates(
-    recordings.map((r) => r.classmates ?? [])
+  const peopleMap = await buildPeopleMap(
+    recordings.map((r) => r.people ?? [])
   );
 
   // Object sizes from storage so cards can flag missing sources.
@@ -57,7 +50,7 @@ export default async function EchoesPage() {
 
       <EchoesClient
         recordings={recordings}
-        classmateMap={classmateMap}
+        peopleMap={peopleMap}
         sizeByName={sizeByName}
         totalCount={recordings.length}
       />

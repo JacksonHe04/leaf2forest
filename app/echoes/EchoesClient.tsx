@@ -2,18 +2,17 @@
 
 import { useState, useMemo } from "react";
 import { Search } from "lucide-react";
-import type { Recording } from "@/lib/db/types";
-import type { Classmate } from "@/lib/db/types";
+import type { Recording, Person } from "@/lib/db/types";
 import RecordingCard from "@/components/features/RecordingCard";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import { EchoesFilterBar } from "./EchoesFilterBar";
 
-type ClassmateMap = Record<string, Classmate>;
+type PeopleMap = Record<string, Person>;
 
 interface Props {
   recordings: Recording[];
-  classmateMap: ClassmateMap;
+  peopleMap: PeopleMap;
   sizeByName: Record<string, number>;
   totalCount: number;
 }
@@ -26,7 +25,7 @@ interface Props {
  */
 export function EchoesClient({
   recordings,
-  classmateMap,
+  peopleMap,
   sizeByName,
   totalCount,
 }: Props) {
@@ -106,8 +105,8 @@ export function EchoesClient({
                     <RecordingCard
                       key={rec.id}
                       recording={rec}
-                      classmates={(rec.classmates ?? [])
-                        .map((id) => classmateMap[id])
+                      people={(rec.people ?? [])
+                        .map((id) => peopleMap[id])
                         .filter(Boolean)}
                       sizeBytes={sizeByName[rec.audio_path] ?? 0}
                       index={i}

@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 import { Users, Mic } from "lucide-react";
-import type { Classmate, Recording } from "@/lib/db/types";
+import type { Classmate, Teacher, Recording } from "@/lib/db/types";
 import { ClassmatesTable } from "./classmates/ClassmatesTable";
 import { RecordingsTable } from "./RecordingsTable";
 
@@ -10,10 +10,11 @@ type Tab = "classmates" | "recordings";
 
 interface Props {
   classmates: Classmate[];
+  teachers: Teacher[];
   recordings: Recording[];
 }
 
-export function AdminTabsClient({ classmates, recordings }: Props) {
+export function AdminTabsClient({ classmates, teachers, recordings }: Props) {
   const [tab, setTab] = useState<Tab>("classmates");
 
   return (
@@ -38,7 +39,7 @@ export function AdminTabsClient({ classmates, recordings }: Props) {
       {tab === "classmates" ? (
         <ClassmatesTable initialClassmates={classmates} />
       ) : (
-        <RecordingsTable recordings={recordings} classmates={classmates} />
+        <RecordingsTable recordings={recordings} classmates={classmates} teachers={teachers} />
       )}
     </>
   );

@@ -1,10 +1,10 @@
 import Link from "next/link";
 import { ArrowRight, Leaf, Mic, BookOpen } from "lucide-react";
 import { listRecordings } from "@/lib/db/recordings";
-import { listClassmatesByIds } from "@/lib/db/classmates";
+import { buildPeopleMap } from "@/lib/db/people";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { BUCKET_RECORDINGS } from "@/lib/storage";
-import type { Classmate } from "@/lib/db/types";
+import type { Person } from "@/lib/db/types";
 import RecordingCard from "@/components/features/RecordingCard";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
@@ -13,19 +13,10 @@ import { SITE } from "@/lib/site";
 
 export const revalidate = 60;
 
-type ClassmateMap = Record<string, Classmate>;
-
-async function resolveClassmates(groups: string[][]): Promise<ClassmateMap> {
-  const allIds = new Set<string>();
-  for (const ids of groups) ids.forEach((id) => allIds.add(id));
-  const list = await listClassmatesByIds([...allIds]);
-  return Object.fromEntries(list.map((c) => [c.id, c]));
-}
-
 export default async function HomePage() {
   const recordings = await listRecordings({ limit: 24 });
-  const classmateMap = await resolveClassmates(
-    recordings.map((r) => r.classmates ?? [])
+  const peopleMap = await buildPeopleMap(
+    recordings.map((r) => r.people ?? [])
   );
 
   // Resolve audio object sizes so cards can flag 0-byte sources.
@@ -135,8 +126,8 @@ export default async function HomePage() {
                 <RecordingCard
                   key={rec.id}
                   recording={rec}
-                  classmates={(rec.classmates ?? [])
-                    .map((id) => classmateMap[id])
+                  people={(rec.people ?? [])
+                    .map((id) => peopleMap[id])
                     .filter(Boolean)}
                   sizeBytes={sizeByName[rec.audio_path] ?? 0}
                   index={i}

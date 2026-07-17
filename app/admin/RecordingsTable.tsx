@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InlineAudioPlayer } from "./InlineAudioPlayer";
 import { ClassmateTagSelector } from "./ClassmateTagSelector";
-import type { Recording, Classmate } from "@/lib/db/types";
+import type { Recording, Classmate, Teacher } from "@/lib/db/types";
 
 /* ── Constants ── */
 
@@ -55,7 +55,7 @@ const DATA_COLUMNS: ColDef[] = [
   { key: "transcription", label: "转录", width: "w-48", type: "text", group: "内容", editable: true },
   { key: "audio_path", label: "音频路径", width: "w-40", group: "音频", editable: false },
   { key: "duration_seconds", label: "时长", width: "w-16", group: "音频", editable: false },
-  { key: "classmates", label: "参与同学", width: "w-36", type: "text", group: "关联", editable: true },
+  { key: "people", label: "参与人员", width: "w-36", type: "text", group: "关联", editable: true },
 ];
 
 /* ── Cell status ── */
@@ -74,14 +74,18 @@ function getVal(rec: Recording, key: string): string {
   return String(v);
 }
 
-function resolveClassmateNames(ids: string[], all: Classmate[]): string {
-  const map = new Map(all.map((c) => [c.id, c.name]));
+function resolvePeopleNames(ids: string[], classmates: Classmate[], teachers: Teacher[]): string {
+  const map = new Map<string, string>();
+  for (const c of classmates) map.set(c.id, c.name);
+  for (const t of teachers) map.set(t.id, t.name);
   return ids.map((id) => map.get(id) ?? id).join("、");
 }
 
-function parseClassmateNames(input: string, all: Classmate[]): string[] {
+function parsePeopleNames(input: string, classmates: Classmate[], teachers: Teacher[]): string[] {
   const names = input.split(/[,，、;\s]+/).map((n) => n.trim()).filter(Boolean);
-  const nameMap = new Map(all.map((c) => [c.name, c.id]));
+  const nameMap = new Map<string, string>();
+  for (const c of classmates) nameMap.set(c.name, c.id);
+  for (const t of teachers) nameMap.set(t.name, t.id);
   const ids: string[] = [];
   for (const name of names) {
     const id = nameMap.get(name);
@@ -95,9 +99,10 @@ function parseClassmateNames(input: string, all: Classmate[]): string[] {
 interface Props {
   recordings: Recording[];
   classmates: Classmate[];
+  teachers: Teacher[];
 }
 
-export function RecordingsTable({ recordings: initialRecs, classmates }: Props) {
+export function RecordingsTable({ recordings: initialRecs, classmates, teachers }: Props) {
   const [recordings, setRecordings] = useState(initialRecs);
   const [editing, setEditing] = useState<{ rowId: string; col: string } | null>(null);
   const [editValue, setEditValue] = useState("");
@@ -115,14 +120,14 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
   const displayValue = useCallback(
     (rec: Recording, key: string): string => {
-      if (key === "classmates") return resolveClassmateNames(rec.classmates, classmates);
+      if (key === "people") return resolvePeopleNames(rec.people, classmates, teachers);
       if (key === "duration_seconds") return fmtDuration(rec.duration_seconds);
       if (key === "date" && rec.date && rec.time) {
         return `${rec.date} ${rec.time.slice(0, 5)}`;
       }
       return getVal(rec, key);
     },
-    [classmates]
+    [classmates, teachers]
   );
 
   async function saveCell(rec: Recording, col: string, rawValue: string) {
@@ -130,8 +135,8 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
     setStatuses((p) => ({ ...p, [key]: "saving" }));
     try {
       const payload: Record<string, unknown> = {};
-      if (col === "classmates") {
-        payload.classmates = parseClassmateNames(rawValue, classmates);
+      if (col === "people") {
+        payload.people = parsePeopleNames(rawValue, classmates, teachers);
       } else {
         payload[col] = rawValue === "" ? null : rawValue;
       }
@@ -145,7 +150,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
       setRecordings((prev) =>
         prev.map((r) => {
           if (r.id !== rec.id) return r;
-          if (col === "classmates") return { ...r, classmates: parseClassmateNames(rawValue, classmates) };
+          if (col === "people") return { ...r, people: parsePeopleNames(rawValue, classmates, teachers) };
           return { ...r, [col]: rawValue || null };
         })
       );
@@ -159,26 +164,26 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
   function startEdit(rec: Recording, col: ColDef) {
     setEditing({ rowId: rec.id, col: col.key });
-    if (col.key === "classmates") {
-      setEditClassmateIds(rec.classmates ?? []);
+    if (col.key === "people") {
+      setEditClassmateIds(rec.people ?? []);
     } else {
       setEditValue(getVal(rec, col.key));
     }
   }
 
-  async function saveClassmates(rec: Recording, ids: string[]) {
-    const key = ck(rec.id, "classmates");
+  async function savePeople(rec: Recording, ids: string[]) {
+    const key = ck(rec.id, "people");
     setStatuses((p) => ({ ...p, [key]: "saving" }));
     try {
       const res = await fetch(`/api/recordings/${rec.num}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ classmates: ids }),
+        body: JSON.stringify({ people: ids }),
       });
       const json = await res.json();
       if (json.status !== "success") throw new Error("保存失败");
       setRecordings((prev) =>
-        prev.map((r) => (r.id === rec.id ? { ...r, classmates: ids } : r))
+        prev.map((r) => (r.id === rec.id ? { ...r, people: ids } : r))
       );
       setStatuses((p) => ({ ...p, [key]: "saved" }));
       setTimeout(() => setStatuses((p) => { const n = { ...p }; delete n[key]; return n; }), 2000);
@@ -190,8 +195,8 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
   function commitEdit() {
     if (!editing) return;
-    // Classmates column is handled by ClassmateTagSelector onFinish
-    if (editing.col === "classmates") return;
+    // People column is handled by ClassmateTagSelector onFinish
+    if (editing.col === "people") return;
     const rec = recordings.find((r) => r.id === editing.rowId);
     const col = DATA_COLUMNS.find((c) => c.key === editing.col);
     if (!rec || !col) return;
@@ -326,18 +331,19 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                         className={`${col.width} px-1 py-1 border-l border-border/15 ${isTitle ? `sticky z-10 ${stickyBg} border-r border-border/30 font-medium` : ""}`}
                         style={isTitle ? { left: IDX_W } : undefined}
                       >
-                        {isEditing && isEditable && col.key === "classmates" ? (
+                        {isEditing && isEditable && col.key === "people" ? (
                           <ClassmateTagSelector
                             value={editClassmateIds}
                             allClassmates={classmates}
+                            allTeachers={teachers}
                             onChange={setEditClassmateIds}
                             onFinish={() => {
                               const rec = recordings.find((r) => r.id === editing?.rowId);
                               if (rec) {
-                                const origIds = rec.classmates ?? [];
+                                const origIds = rec.people ?? [];
                                 const newIds = editClassmateIds;
                                 if (JSON.stringify(origIds) !== JSON.stringify(newIds)) {
-                                  saveClassmates(rec, newIds);
+                                  savePeople(rec, newIds);
                                 }
                               }
                               setEditing(null);

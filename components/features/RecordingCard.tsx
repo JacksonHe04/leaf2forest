@@ -3,12 +3,12 @@
 import Link from "next/link";
 import { Calendar, Clock, MapPin } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
-import type { Recording, Classmate } from "@/lib/db/types";
+import type { Recording, Person } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
 
 interface Props {
   recording: Recording;
-  classmates: Classmate[];
+  people: Person[];
   /**
    * Bytes in the recordings bucket. 0 ⇒ the local source was empty,
    * we render an explicit "missing" tag instead of a silent player.
@@ -23,7 +23,7 @@ interface Props {
 
 export default function RecordingCard({
   recording,
-  classmates,
+  people,
   sizeBytes,
   index = 0,
   variant = "archive",
@@ -129,7 +129,7 @@ export default function RecordingCard({
         </div>
 
         {/* Footer — location + participants */}
-        {(recording.location || classmates.length > 0) && (
+        {(recording.location || people.length > 0) && (
           <div className="relative z-10 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border/60 pt-3">
             {recording.location && (
               <span className="inline-flex items-center gap-1.5 font-serif text-xs text-ink-faint">
@@ -137,15 +137,25 @@ export default function RecordingCard({
                 {recording.location}
               </span>
             )}
-            {classmates.map((c) => (
-              <Link
-                key={c.id}
-                href={`/forest/${c.user_id}`}
-                className="inline-flex items-center gap-1 rounded-full border border-forest/25 bg-forest/5 px-2 py-0.5 font-serif text-[11px] text-ink-soft transition-colors hover:border-forest hover:bg-forest hover:text-paper-soft"
-              >
-                {c.name}
-              </Link>
-            ))}
+            {people.map((p) =>
+              p.kind === 'classmate' ? (
+                <Link
+                  key={p.id}
+                  href={`/forest/${p.user_id}`}
+                  className="inline-flex items-center gap-1 rounded-full border border-forest/25 bg-forest/5 px-2 py-0.5 font-serif text-[11px] text-ink-soft transition-colors hover:border-forest hover:bg-forest hover:text-paper-soft"
+                >
+                  {p.name}
+                </Link>
+              ) : (
+                <span
+                  key={p.id}
+                  className="inline-flex items-center gap-1 rounded-full border border-gold/25 bg-gold/5 px-2 py-0.5 font-serif text-[11px] text-ink-soft"
+                >
+                  {p.name}
+                  <span className="text-ink-faint/60 text-[10px]">{p.subject}</span>
+                </span>
+              )
+            )}
           </div>
         )}
       </div>

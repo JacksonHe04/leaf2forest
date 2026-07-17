@@ -44,7 +44,7 @@ export default async function ClassmateProfilePage({ params }: Props) {
     : null;
 
   // Recordings this classmate appears in.
-  const recordings = await listRecordings({ classmateId: c.id });
+  const recordings = await listRecordings({ peopleId: c.id });
   const initials = c.name.slice(0, 1);
 
   const educationRows: { label: string; university: string | null; major: string | null }[] = [
@@ -199,7 +199,7 @@ export default async function ClassmateProfilePage({ params }: Props) {
                     <RecordingCard
                       key={r.id}
                       recording={r}
-                      classmates={[c]}
+                      people={[{ kind: 'classmate', id: c.id, name: c.name, user_id: c.user_id }]}
                       sizeBytes={null}
                       variant="row"
                       index={i}

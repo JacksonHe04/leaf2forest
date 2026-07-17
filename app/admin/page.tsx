@@ -6,6 +6,7 @@ import {
 } from "lucide-react";
 import { listRecordings } from "@/lib/db/recordings";
 import { listClassmates } from "@/lib/db/classmates";
+import { listTeachers } from "@/lib/db/teachers";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { BUCKET_IMAGES, BUCKET_RECORDINGS } from "@/lib/storage";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -15,8 +16,9 @@ import { AdminTabsClient } from "./AdminTabsClient";
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [classmates, recordings, supabase] = await Promise.all([
+  const [classmates, teachers, recordings, supabase] = await Promise.all([
     listClassmates(),
+    listTeachers(),
     listRecordings(),
     Promise.resolve(getSupabaseAdmin()),
   ]);
@@ -48,6 +50,7 @@ export default async function AdminPage() {
         {/* Tabs */}
         <AdminTabsClient
           classmates={classmates}
+          teachers={teachers}
           recordings={recordings}
         />
 

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { listClassmates } from "@/lib/db/classmates";
+import { listTeachers } from "@/lib/db/teachers";
 import NewRecordingForm from "./RecordingForm";
 import { PageHeader } from "@/components/site/PageHeader";
 import { Button } from "@/components/ui/button";
@@ -8,7 +9,10 @@ import { Button } from "@/components/ui/button";
 export const dynamic = "force-dynamic";
 
 export default async function NewRecordingPage() {
-  const classmates = await listClassmates();
+  const [classmates, teachers] = await Promise.all([
+    listClassmates(),
+    listTeachers(),
+  ]);
   return (
     <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
       <PageHeader
@@ -34,7 +38,8 @@ export default async function NewRecordingPage() {
         }
       />
       <NewRecordingForm
-        classmates={classmates.map((c) => ({ id: c.id, name: c.name }))}
+        classmates={classmates.map((c) => ({ id: c.id, name: c.name, kind: "classmate" as const }))}
+        teachers={teachers.map((t) => ({ id: t.id, name: t.name, kind: "teacher" as const, subject: t.subject }))}
       />
     </main>
   );
