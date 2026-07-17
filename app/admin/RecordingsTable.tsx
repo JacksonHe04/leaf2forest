@@ -13,7 +13,7 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { InlineAudioPlayer } from "./InlineAudioPlayer";
-import { ClassmateTagSelector } from "./ClassmateTagSelector";
+import { ClassmateTagSelector } from "@/components/features/ClassmateTagSelector";
 import type { Recording, Classmate, Teacher } from "@/lib/db/types";
 
 /* ── Constants ── */

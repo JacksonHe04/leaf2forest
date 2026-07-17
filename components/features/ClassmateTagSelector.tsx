@@ -1,8 +1,9 @@
 "use client";
 
 import { useState, useRef, useEffect, useMemo, useCallback } from "react";
-import { X } from "lucide-react";
+import { X, Loader2 } from "lucide-react";
 import type { Classmate, Teacher } from "@/lib/db/types";
+import { usePeopleData } from "@/components/providers/PeopleDataContext";
 import { cn } from "@/lib/utils";
 
 /** Unified item for display in the selector. */
@@ -10,23 +11,24 @@ interface SelectorItem {
   id: string;
   name: string;
   kind: "classmate" | "teacher";
-  /** Only for classmates */
   city?: string | null;
-  /** Only for teachers */
   subject?: string;
 }
 
 interface Props {
   /** Currently selected UUIDs (classmates + teachers) */
   value: string[];
-  /** Full list of classmates (pre-loaded) */
-  allClassmates: Classmate[];
-  /** Full list of teachers (pre-loaded) */
-  allTeachers: Teacher[];
   /** Called when selection changes */
   onChange: (ids: string[]) => void;
   /** Called when user wants to commit (blur/enter on empty) */
   onFinish?: () => void;
+  /**
+   * Explicit data props for backward compatibility (admin tables
+   * pass data from server). When omitted, the component reads from
+   * the global PeopleDataContext and auto-triggers loading.
+   */
+  allClassmates?: Classmate[];
+  allTeachers?: Teacher[];
 }
 
 /**
@@ -35,14 +37,19 @@ interface Props {
  * Shows selected people as removable tags. Typing in the input
  * filters the dropdown by name match. Arrow keys navigate, Enter
  * selects, Backspace on empty removes the last tag.
+ *
+ * Can work in two modes:
+ * 1. With explicit props (allClassmates + allTeachers) — used by admin tables
+ * 2. Without props — reads from global PeopleDataContext, auto-triggers load
  */
 export function ClassmateTagSelector({
   value,
-  allClassmates,
-  allTeachers,
   onChange,
   onFinish,
+  allClassmates: explicitClassmates,
+  allTeachers: explicitTeachers,
 }: Props) {
+  const ctx = usePeopleData();
   const [query, setQuery] = useState("");
   const [open, setOpen] = useState(false);
   const [activeIdx, setActiveIdx] = useState(0);
@@ -50,22 +57,34 @@ export function ClassmateTagSelector({
   const listRef = useRef<HTMLDivElement>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
+  // Resolve data source: explicit props or context
+  const rawClassmates = explicitClassmates ?? ctx.classmates;
+  const rawTeachers = explicitTeachers ?? ctx.teachers;
+  const isLoading = !explicitClassmates && ctx.loading;
+
+  // Auto-trigger load when using context
+  useEffect(() => {
+    if (!explicitClassmates) {
+      ctx.load();
+    }
+  }, [explicitClassmates, ctx.load]);
+
   // Merge classmates + teachers into a unified list
   const allItems = useMemo<SelectorItem[]>(() => {
-    const classmates: SelectorItem[] = allClassmates.map((c) => ({
+    const classmates: SelectorItem[] = rawClassmates.map((c) => ({
       id: c.id,
       name: c.name,
       kind: "classmate" as const,
       city: c.city,
     }));
-    const teachers: SelectorItem[] = allTeachers.map((t) => ({
+    const teachers: SelectorItem[] = rawTeachers.map((t) => ({
       id: t.id,
       name: t.name,
       kind: "teacher" as const,
       subject: t.subject,
     }));
     return [...classmates, ...teachers];
-  }, [allClassmates, allTeachers]);
+  }, [rawClassmates, rawTeachers]);
 
   // Build ID→item map once
   const idMap = useMemo(
@@ -199,8 +218,19 @@ export function ClassmateTagSelector({
           onFocus={() => setOpen(true)}
           onKeyDown={onKey}
           className="flex-1 min-w-[60px] bg-transparent font-serif text-xs text-ink outline-none placeholder:text-ink-faint/60"
-          placeholder={selectedItems.length > 0 ? "继续添加…" : "搜索同学或老师…"}
+          placeholder={
+            isLoading
+              ? "加载中…"
+              : selectedItems.length > 0
+              ? "继续添加…"
+              : "搜索同学或老师…"
+          }
+          disabled={isLoading}
         />
+
+        {isLoading && (
+          <Loader2 className="h-3 w-3 animate-spin text-ink-faint shrink-0" />
+        )}
       </div>
 
       {/* Dropdown */}

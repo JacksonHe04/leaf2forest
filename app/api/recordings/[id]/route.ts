@@ -4,6 +4,7 @@ import {
   getRecordingByIdOrNum,
   updateRecording,
 } from '@/lib/db/recordings';
+import { resolvePeople } from '@/lib/db/people';
 
 export const dynamic = 'force-dynamic';
 
@@ -22,7 +23,9 @@ export async function GET(
     if (!recording) {
       return NextResponse.json({ error: '未找到录音' }, { status: 404 });
     }
-    return NextResponse.json({ status: 'success', data: recording });
+    const peopleIds = recording.people ?? [];
+    const people_resolved = peopleIds.length > 0 ? await resolvePeople(peopleIds) : [];
+    return NextResponse.json({ status: 'success', data: { ...recording, people_resolved } });
   } catch (error) {
     console.error('获取录音失败:', error);
     return NextResponse.json({ error: '获取录音失败' }, { status: 500 });

@@ -5,25 +5,21 @@ import Link from "next/link";
 import {
   Calendar,
   Clock,
-  MapPin,
   Users,
-  ArrowLeft,
   FileText,
   Quote,
   Mic,
-  Pencil,
-  Save,
-  X,
   Loader2,
   Check,
   AlertCircle,
   Sparkles,
+  X,
 } from "lucide-react";
 import AudioPlayer from "@/components/features/AudioPlayer";
-import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
+import { ClassmateTagSelector } from "@/components/features/ClassmateTagSelector";
 import type { Recording, Person } from "@/lib/db/types";
 
 /* ── Types ── */
@@ -39,18 +35,20 @@ interface Props {
 type FieldStatus = "idle" | "saving" | "saved" | "error";
 type TranscribeStatus = "idle" | "streaming" | "done" | "error";
 
-/* ── Editable field ── */
+/* ── Direct-edit field: click text to edit ── */
 
-function EditableField({
+function DirectEditField({
   label,
   value,
   fieldKey,
+  type = "text",
   multiline = false,
   onSave,
 }: {
   label: string;
   value: string;
   fieldKey: string;
+  type?: "text" | "date";
   multiline?: boolean;
   onSave: (key: string, value: string) => Promise<void>;
 }) {
@@ -96,13 +94,14 @@ function EditableField({
     return (
       <div className="space-y-1.5">
         <label className="text-xs font-medium text-ink-faint">{label}</label>
-        <div className="flex gap-1.5">
+        <div className="relative">
           {multiline ? (
             <textarea
               ref={inputRef as React.RefObject<HTMLTextAreaElement>}
               className="flex w-full rounded-lg border border-ring bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-ring min-h-[80px] resize-y"
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
               onKeyDown={(e) => {
                 if (e.key === "Enter" && e.metaKey) commit();
                 if (e.key === "Escape") cancel();
@@ -112,30 +111,21 @@ function EditableField({
             <input
               ref={inputRef as React.RefObject<HTMLInputElement>}
               className="flex w-full rounded-lg border border-ring bg-paper px-3 py-2 text-sm text-ink outline-none focus:border-ring"
-              type="text"
+              type={type}
               value={draft}
               onChange={(e) => setDraft(e.target.value)}
+              onBlur={commit}
               onKeyDown={(e) => {
                 if (e.key === "Enter") commit();
                 if (e.key === "Escape") cancel();
               }}
             />
           )}
-          <div className="flex flex-col gap-1">
-            <button
-              onClick={commit}
-              className="rounded p-1 text-forest hover:bg-forest/10 transition-colors"
-              title="保存 (⌘+Enter)"
-            >
-              <Check className="h-3.5 w-3.5" />
-            </button>
-            <button
-              onClick={cancel}
-              className="rounded p-1 text-ink-faint hover:bg-ink-faint/10 transition-colors"
-              title="取消 (Esc)"
-            >
-              <X className="h-3.5 w-3.5" />
-            </button>
+          {/* Status indicator */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
+            {status === "saving" && <Loader2 className="h-3 w-3 animate-spin text-gold" />}
+            {status === "saved" && <Check className="h-3 w-3 text-forest" />}
+            {status === "error" && <AlertCircle className="h-3 w-3 text-red-500" />}
           </div>
         </div>
       </div>
@@ -144,24 +134,22 @@ function EditableField({
 
   return (
     <div className="group/field">
-      <div className="flex items-center justify-between">
-        <label className="text-xs font-medium text-ink-faint">{label}</label>
-        <div className="flex items-center gap-1 opacity-0 group-hover/field:opacity-100 transition-opacity">
+      <label className="text-xs font-medium text-ink-faint">{label}</label>
+      <div className="relative mt-1">
+        <p
+          onClick={() => setEditing(true)}
+          className="text-sm text-ink whitespace-pre-wrap leading-relaxed cursor-pointer rounded-sm transition-colors hover:bg-forest/5 -mx-1 px-1"
+          title="点击编辑"
+        >
+          {value || <span className="italic text-ink-faint/60">点击填写</span>}
+        </p>
+        {/* Status indicator */}
+        <div className="absolute right-0 top-0 flex items-center gap-1">
           {status === "saving" && <Loader2 className="h-3 w-3 animate-spin text-gold" />}
           {status === "saved" && <Check className="h-3 w-3 text-forest" />}
           {status === "error" && <AlertCircle className="h-3 w-3 text-red-500" />}
-          <button
-            onClick={() => setEditing(true)}
-            className="rounded p-1 text-ink-faint hover:text-forest hover:bg-forest/10 transition-colors"
-            title="编辑"
-          >
-            <Pencil className="h-3 w-3" />
-          </button>
         </div>
       </div>
-      <p className="mt-1 text-sm text-ink whitespace-pre-wrap leading-relaxed">
-        {value || <span className="italic text-ink-faint/60">未填写</span>}
-      </p>
     </div>
   );
 }
@@ -179,7 +167,6 @@ function TranscriptionSection({
 }) {
   const [text, setText] = useState(transcription);
   const [status, setStatus] = useState<TranscribeStatus>("idle");
-  const [editing, setEditing] = useState(false);
   const [saveStatus, setSaveStatus] = useState<FieldStatus>("idle");
   const abortRef = useRef<AbortController | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -190,7 +177,6 @@ function TranscriptionSection({
 
   async function startTranscribe() {
     if (status === "streaming") {
-      // Cancel
       abortRef.current?.abort();
       setStatus("done");
       return;
@@ -198,7 +184,6 @@ function TranscriptionSection({
 
     setStatus("streaming");
     setText("");
-    setEditing(true);
 
     const controller = new AbortController();
     abortRef.current = controller;
@@ -235,29 +220,34 @@ function TranscriptionSection({
 
           try {
             const parsed = JSON.parse(payload);
-            // Volcengine ASR format: cumulative text
             if (typeof parsed.text === "string") {
               setText(parsed.text);
               if (textareaRef.current) {
                 textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
               }
             }
-            // Progress indicator (dot)
-            if (parsed.progress) {
-              // Just keep the streaming indicator visible
-            }
-            // Error from server
             if (parsed.error) {
               throw new Error(parsed.error);
             }
           } catch (e) {
             if (e instanceof Error && e.message) throw e;
-            // skip malformed JSON
           }
         }
       }
 
       setStatus("done");
+      // Auto-save after transcription completes
+      if (text !== transcription) {
+        setSaveStatus("saving");
+        try {
+          await onSave("transcription", text);
+          setSaveStatus("saved");
+          setTimeout(() => setSaveStatus("idle"), 1500);
+        } catch {
+          setSaveStatus("error");
+          setTimeout(() => setSaveStatus("idle"), 2000);
+        }
+      }
     } catch (err: unknown) {
       if (err instanceof Error && err.name === "AbortError") {
         setStatus("done");
@@ -268,16 +258,12 @@ function TranscriptionSection({
     }
   }
 
-  async function saveTranscription() {
-    if (text === transcription) {
-      setEditing(false);
-      return;
-    }
+  async function saveText() {
+    if (text === transcription) return;
     setSaveStatus("saving");
     try {
       await onSave("transcription", text);
       setSaveStatus("saved");
-      setEditing(false);
       setTimeout(() => setSaveStatus("idle"), 1500);
     } catch {
       setSaveStatus("error");
@@ -315,7 +301,6 @@ function TranscriptionSection({
             size="sm"
             variant={status === "streaming" ? "destructive" : "outline"}
             onClick={startTranscribe}
-            disabled={status === "done" && text === transcription}
           >
             {status === "streaming" ? (
               <>
@@ -329,79 +314,151 @@ function TranscriptionSection({
               </>
             )}
           </Button>
-          {editing && status !== "streaming" && (
-            <>
-              <Button size="sm" onClick={saveTranscription}>
-                <Save className="h-3.5 w-3.5" />
-                保存
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => {
-                  setText(transcription);
-                  setEditing(false);
-                }}
-              >
-                取消
-              </Button>
-            </>
-          )}
-          {!editing && status !== "streaming" && (
-            <Button
-              size="sm"
-              variant="ghost"
-              onClick={() => {
-                setEditing(true);
-                setStatus("idle");
-              }}
-            >
-              <Pencil className="h-3.5 w-3.5" />
-              编辑
-            </Button>
-          )}
         </div>
       </div>
 
-      {editing || status === "streaming" ? (
-        <div className="relative">
-          <span
-            className="pointer-events-none absolute left-0 top-0 bottom-0 w-0.5 bg-gold/40"
-            aria-hidden="true"
-          />
-          <Textarea
-            ref={textareaRef}
-            className="min-h-[200px] pl-5 italic text-sm leading-relaxed resize-y"
-            placeholder={
-              status === "streaming"
-                ? "正在识别音频内容..."
-                : "点击「AI 转写」开始识别，或手动输入转录内容..."
-            }
-            value={text}
-            onChange={(e) => {
-              setText(e.target.value);
-              if (!editing) setEditing(true);
-            }}
-            disabled={status === "streaming"}
-          />
+      <div className="relative">
+        <span
+          className="pointer-events-none absolute left-0 top-0 bottom-0 w-0.5 bg-gold/40"
+          aria-hidden="true"
+        />
+        <Textarea
+          ref={textareaRef}
+          className="min-h-[200px] pl-5 italic text-sm leading-relaxed resize-y"
+          placeholder={
+            status === "streaming"
+              ? "正在识别音频内容..."
+              : "点击「AI 转写」自动识别，或直接输入转录内容..."
+          }
+          value={text}
+          onChange={(e) => setText(e.target.value)}
+          onBlur={saveText}
+          disabled={status === "streaming"}
+        />
+      </div>
+    </section>
+  );
+}
+
+/* ── People editing section ── */
+
+function PeopleSection({
+  people,
+  peopleIds,
+  onSave,
+}: {
+  people: Person[];
+  peopleIds: string[];
+  onSave: (ids: string[]) => Promise<void>;
+}) {
+  const [editing, setEditing] = useState(false);
+  const [draftIds, setDraftIds] = useState(peopleIds);
+  const [status, setStatus] = useState<FieldStatus>("idle");
+
+  useEffect(() => {
+    setDraftIds(peopleIds);
+  }, [peopleIds]);
+
+  async function commit() {
+    if (JSON.stringify(draftIds) === JSON.stringify(peopleIds)) {
+      setEditing(false);
+      return;
+    }
+    setStatus("saving");
+    try {
+      await onSave(draftIds);
+      setStatus("saved");
+      setEditing(false);
+      setTimeout(() => setStatus("idle"), 1500);
+    } catch {
+      setStatus("error");
+      setTimeout(() => setStatus("idle"), 2000);
+    }
+  }
+
+  if (editing) {
+    return (
+      <section>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
+            <Users className="h-4 w-4" />
+          </span>
+          <div>
+            <div className="eyebrow">Present</div>
+            <h2 className="display-heading text-2xl text-ink leading-tight">
+              参与的人
+            </h2>
+          </div>
+          <div className="ml-auto flex items-center gap-1.5">
+            {status === "saving" && <Loader2 className="h-3.5 w-3.5 animate-spin text-gold" />}
+            {status === "saved" && <Check className="h-3.5 w-3.5 text-forest" />}
+            {status === "error" && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+            <Button size="sm" variant="ghost" onClick={commit}>
+              <Check className="h-3.5 w-3.5" />
+              完成
+            </Button>
+          </div>
         </div>
-      ) : text ? (
-        <div className="relative">
-          <span
-            className="pointer-events-none absolute left-0 top-0 bottom-0 w-0.5 bg-gold/40"
-            aria-hidden="true"
-          />
-          <p className="prose-archive whitespace-pre-wrap pl-5 italic">
-            {text}
-          </p>
+        <ClassmateTagSelector
+          value={draftIds}
+          onChange={setDraftIds}
+          onFinish={commit}
+        />
+      </section>
+    );
+  }
+
+  return (
+    <section>
+      <div className="flex items-center gap-3 mb-4">
+        <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
+          <Users className="h-4 w-4" />
+        </span>
+        <div>
+          <div className="eyebrow">Present</div>
+          <h2 className="display-heading text-2xl text-ink leading-tight">
+            参与的人
+          </h2>
         </div>
+        <div className="ml-auto flex items-center gap-1.5">
+          {status === "saving" && <Loader2 className="h-3.5 w-3.5 animate-spin text-gold" />}
+          {status === "saved" && <Check className="h-3.5 w-3.5 text-forest" />}
+          {status === "error" && <AlertCircle className="h-3.5 w-3.5 text-red-500" />}
+          <Button size="sm" variant="ghost" onClick={() => setEditing(true)}>
+            编辑
+          </Button>
+        </div>
+      </div>
+      {people.length > 0 ? (
+        <ul className="flex flex-wrap gap-2">
+          {people.map((p) =>
+            p.kind === "classmate" ? (
+              <li key={p.id}>
+                <Link
+                  href={`/forest/${p.user_id}`}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
+                >
+                  <LeafMotif variant="mark" className="h-3 w-3" />
+                  {p.name}
+                </Link>
+              </li>
+            ) : (
+              <li key={p.id}>
+                <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft">
+                  {p.name}
+                  <span className="text-ink-faint/60 text-xs">{p.subject}</span>
+                </span>
+              </li>
+            )
+          )}
+        </ul>
       ) : (
-        <div className="rounded-lg border border-dashed border-border px-6 py-10 text-center">
-          <FileText className="mx-auto h-8 w-8 text-ink-faint/40" />
-          <p className="mt-2 text-sm text-ink-faint">
-            暂无转录内容，点击「AI 转写」自动识别音频
-          </p>
-        </div>
+        <p
+          onClick={() => setEditing(true)}
+          className="italic text-ink-faint/60 text-sm cursor-pointer hover:text-forest transition-colors"
+        >
+          点击添加参与的人
+        </p>
       )}
     </section>
   );
@@ -417,6 +474,8 @@ export function RecordingDetailClient({
   dateLabel,
 }: Props) {
   const [data, setData] = useState(recording);
+  const [currentPeople, setCurrentPeople] = useState(people);
+  const [currentPeopleIds, setCurrentPeopleIds] = useState(recording.people ?? []);
 
   const saveField = useCallback(
     async (key: string, value: string) => {
@@ -431,6 +490,27 @@ export function RecordingDetailClient({
       const json = await res.json();
       if (json.status !== "success") throw new Error("保存失败");
       setData((prev) => ({ ...prev, [key]: value || null }));
+    },
+    [data.num]
+  );
+
+  const savePeople = useCallback(
+    async (ids: string[]) => {
+      const res = await fetch(`/api/recordings/${data.num}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ people: ids }),
+      });
+      const json = await res.json();
+      if (json.status !== "success") throw new Error("保存失败");
+      setCurrentPeopleIds(ids);
+      // Refetch people display — for now, reload the page data
+      // A more elegant solution would be to resolve people client-side
+      const peopleRes = await fetch(`/api/recordings/${data.num}`);
+      const peopleJson = await peopleRes.json();
+      if (peopleJson.data?.people_resolved) {
+        setCurrentPeople(peopleJson.data.people_resolved);
+      }
     },
     [data.num]
   );
@@ -453,23 +533,15 @@ export function RecordingDetailClient({
           )}
         </div>
 
-        <EditableField
+        <DirectEditField
           label="标题"
           value={data.title}
           fieldKey="title"
           onSave={saveField}
         />
 
-        {data.location && (
-          <p className="mt-4 inline-flex items-center gap-1.5 font-serif text-sm text-ink-soft">
-            <MapPin className="h-4 w-4 text-forest" />
-            {data.location}
-          </p>
-        )}
-
-        {/* Editable location */}
         <div className="mt-2">
-          <EditableField
+          <DirectEditField
             label="地点"
             value={data.location ?? ""}
             fieldKey="location"
@@ -479,13 +551,14 @@ export function RecordingDetailClient({
 
         {/* Editable date/time */}
         <div className="mt-4 grid grid-cols-2 gap-4 max-w-md">
-          <EditableField
+          <DirectEditField
             label="日期"
             value={data.date}
             fieldKey="date"
+            type="date"
             onSave={saveField}
           />
-          <EditableField
+          <DirectEditField
             label="时间"
             value={data.time ?? ""}
             fieldKey="time"
@@ -529,7 +602,7 @@ export function RecordingDetailClient({
               </h2>
             </div>
           </div>
-          <EditableField
+          <DirectEditField
             label="故事"
             value={data.story ?? ""}
             fieldKey="story"
@@ -545,44 +618,12 @@ export function RecordingDetailClient({
           onSave={saveField}
         />
 
-        {/* Related people */}
-        {people.length > 0 && (
-          <section>
-            <div className="flex items-center gap-3 mb-4">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
-                <Users className="h-4 w-4" />
-              </span>
-              <div>
-                <div className="eyebrow">Present</div>
-                <h2 className="display-heading text-2xl text-ink leading-tight">
-                  参与的人
-                </h2>
-              </div>
-            </div>
-            <ul className="flex flex-wrap gap-2">
-              {people.map((p) =>
-                p.kind === 'classmate' ? (
-                  <li key={p.id}>
-                    <Link
-                      href={`/forest/${p.user_id}`}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
-                    >
-                      <LeafMotif variant="mark" className="h-3 w-3" />
-                      {p.name}
-                    </Link>
-                  </li>
-                ) : (
-                  <li key={p.id}>
-                    <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft">
-                      {p.name}
-                      <span className="text-ink-faint/60 text-xs">{p.subject}</span>
-                    </span>
-                  </li>
-                )
-              )}
-            </ul>
-          </section>
-        )}
+        {/* Related people — editable */}
+        <PeopleSection
+          people={currentPeople}
+          peopleIds={currentPeopleIds}
+          onSave={savePeople}
+        />
       </div>
 
       {/* Closing colophon */}
