@@ -19,7 +19,7 @@ import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ id: string }>;

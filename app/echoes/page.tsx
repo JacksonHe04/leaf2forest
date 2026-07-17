@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { EchoesClient } from "./EchoesClient";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 type ClassmateMap = Record<string, Classmate>;
 

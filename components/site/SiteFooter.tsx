@@ -1,5 +1,8 @@
+"use client";
+
 import Link from "next/link";
 import { FOOTER_LINKS, FOOTER_LINKS_ADMIN, SITE } from "@/lib/site";
+import { useAuth } from "@/lib/useAuth";
 import { LeafMotif } from "./LeafMotif";
 
 /**
@@ -11,7 +14,8 @@ import { LeafMotif } from "./LeafMotif";
  *
  * Admin footer links (管理后台) are only shown when isAdmin is true.
  */
-export function SiteFooter({ isAdmin = false }: { isAdmin?: boolean }) {
+export function SiteFooter() {
+  const { isAdmin } = useAuth();
   const year = new Date().getFullYear();
   const startYear = SITE.graduatingYear - 3; // 2019 入学
   const footerLinks = isAdmin

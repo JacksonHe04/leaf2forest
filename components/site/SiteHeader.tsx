@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { NAV_ITEMS, NAV_ITEMS_ADMIN, SITE } from "@/lib/site";
+import { useAuth } from "@/lib/useAuth";
 import { LeafMotif } from "./LeafMotif";
 
 /**
@@ -14,15 +15,10 @@ import { LeafMotif } from "./LeafMotif";
  *  - Right: primary nav items (desktop only)
  *
  * Mobile navigation is handled by the BottomNav component.
- * Admin nav items (管理) are only shown when isAdmin is true.
+ * Auth state is fetched client-side via useAuth.
  */
-export function SiteHeader({
-  isAdmin = false,
-  isLoggedIn = false,
-}: {
-  isAdmin?: boolean;
-  isLoggedIn?: boolean;
-}) {
+export function SiteHeader() {
+  const { isLoggedIn, isAdmin } = useAuth();
   const baseItems = isLoggedIn
     ? NAV_ITEMS
     : NAV_ITEMS.map((item) =>

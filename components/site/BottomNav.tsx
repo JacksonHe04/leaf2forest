@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { Home, TreePine, Mic, User } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { useAuth } from "@/lib/useAuth";
 
 interface BottomNavItem {
   href: string;
@@ -26,7 +27,8 @@ const LOGGED_OUT_ITEM: BottomNavItem = {
   icon: User,
 };
 
-export function BottomNav({ isLoggedIn = false }: { isLoggedIn?: boolean }) {
+export function BottomNav() {
+  const { isLoggedIn } = useAuth();
   const pathname = usePathname();
   const items = [
     ...BASE_ITEMS,

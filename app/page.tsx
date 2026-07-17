@@ -11,8 +11,7 @@ import { LeafMotif } from "@/components/site/LeafMotif";
 import { SectionTitle } from "@/components/site/SectionTitle";
 import { SITE } from "@/lib/site";
 
-export const dynamic = "force-dynamic";
-export const revalidate = 0;
+export const revalidate = 60;
 
 type ClassmateMap = Record<string, Classmate>;
 

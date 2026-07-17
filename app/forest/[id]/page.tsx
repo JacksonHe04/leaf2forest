@@ -8,7 +8,6 @@ import {
   GraduationCap,
   MessageCircle,
   Phone,
-  User as UserIcon,
 } from "lucide-react";
 import { getClassmateByIdOrUserId } from "@/lib/db/classmates";
 import { listRecordings } from "@/lib/db/recordings";
@@ -19,7 +18,7 @@ import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import RecordingCard from "@/components/features/RecordingCard";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 60;
 
 interface Props {
   params: Promise<{ id: string }>;
@@ -109,13 +108,6 @@ export default async function ClassmateProfilePage({ params }: Props) {
                 </Avatar>
               </div>
 
-              <h2 className="mt-5 display-heading text-2xl text-ink">{c.name}</h2>
-              {c.birth_date && (
-                <p className="mt-1 font-serif text-xs text-ink-faint">
-                  生于 {c.birth_date}
-                </p>
-              )}
-
               <div className="mt-5 flex justify-center">
                 <LeafMotif variant="mark" className="h-5 w-5 text-gold/60" />
               </div>
@@ -141,13 +133,6 @@ export default async function ClassmateProfilePage({ params }: Props) {
 
           {/* Right: detailed panels */}
           <section className="md:col-span-2 space-y-6">
-            {/* Bio */}
-            {c.bio && (
-              <Panel title="个人介绍" icon={<UserIcon className="h-4 w-4" />}>
-                <p className="prose-archive whitespace-pre-wrap">{c.bio}</p>
-              </Panel>
-            )}
-
             {/* Education */}
             {educationRows.length > 0 && (
               <Panel title="教育经历" icon={<GraduationCap className="h-4 w-4" />}>
@@ -237,7 +222,6 @@ export default async function ClassmateProfilePage({ params }: Props) {
             )}
 
             {recordings.length === 0 &&
-              !c.bio &&
               educationRows.length === 0 &&
               contactRows.length === 0 && (
                 <div className="surface-paper rounded-md p-10 text-center">

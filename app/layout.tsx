@@ -4,7 +4,6 @@ import { Providers } from "@/components/providers";
 import { SiteHeader } from "@/components/site/SiteHeader";
 import { SiteFooter } from "@/components/site/SiteFooter";
 import { BottomNav } from "@/components/site/BottomNav";
-import { getCurrentUser } from "@/lib/db/supabase-server";
 import "./globals.css";
 
 /**
@@ -45,14 +44,11 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default async function RootLayout({
+export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const user = await getCurrentUser();
-  const isAdmin = user?.user_metadata?.is_admin === true;
-
   return (
     <html
       lang="zh-CN"
@@ -61,10 +57,10 @@ export default async function RootLayout({
     >
       <body className="min-h-screen flex flex-col antialiased">
         <Providers>
-          <SiteHeader isAdmin={isAdmin} isLoggedIn={!!user} />
+          <SiteHeader />
           <div className="flex-1 pb-16 md:pb-0">{children}</div>
-          <SiteFooter isAdmin={isAdmin} />
-          <BottomNav isLoggedIn={!!user} />
+          <SiteFooter />
+          <BottomNav />
         </Providers>
       </body>
     </html>
