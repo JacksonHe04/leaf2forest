@@ -9,18 +9,21 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import type { Recording } from "@/lib/db/types";
 
-interface ClassmateOption {
+interface PersonOption {
   id: string;
   name: string;
+  kind: "classmate" | "teacher";
+  subject?: string;
 }
 
 interface Props {
-  classmates: ClassmateOption[];
+  classmates: PersonOption[];
+  teachers: PersonOption[];
   /** Existing recording; omit when creating a new one. */
   initial?: Recording;
 }
 
-export default function RecordingForm({ classmates, initial }: Props) {
+export default function RecordingForm({ classmates, teachers, initial }: Props) {
   const router = useRouter();
   const isEdit = Boolean(initial);
 
@@ -35,15 +38,15 @@ export default function RecordingForm({ classmates, initial }: Props) {
     initial?.transcription ?? ""
   );
   const [location, setLocation] = useState(initial?.location ?? "");
-  const [classmateIds, setClassmateIds] = useState<string[]>(
-    initial?.classmates ?? []
+  const [peopleIds, setPeopleIds] = useState<string[]>(
+    initial?.people ?? []
   );
   const [audioFile, setAudioFile] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  function toggleClassmate(id: string) {
-    setClassmateIds((prev) =>
+  function togglePerson(id: string) {
+    setPeopleIds((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]
     );
   }
@@ -82,7 +85,7 @@ export default function RecordingForm({ classmates, initial }: Props) {
         transcription: transcription || null,
         location: location || null,
         audio_path,
-        classmates: classmateIds,
+        people: peopleIds,
       };
 
       const url = isEdit
@@ -225,20 +228,22 @@ export default function RecordingForm({ classmates, initial }: Props) {
         )}
       </FormSection>
 
-      {/* Related classmates */}
+      {/* Related people */}
       <FormSection
-        title="关联同学"
-        eyebrow="04 / Classmates"
-        description="勾选出现在这段录音中的同学。"
+        title="关联人员"
+        eyebrow="04 / People"
+        description="勾选出现在这段录音中的同学和老师。"
       >
+        {/* Classmates */}
+        <p className="font-serif text-xs text-ink-faint mb-2 uppercase tracking-wider">同学</p>
         {classmates.length === 0 ? (
-          <p className="font-serif text-sm text-ink-faint italic">
-            还没有同学。先到「同学管理」添加几位，再回来勾选。
+          <p className="font-serif text-sm text-ink-faint italic mb-4">
+            还没有同学。
           </p>
         ) : (
-          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-72 overflow-y-auto pr-1">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1 mb-6">
             {classmates.map((c) => {
-              const checked = classmateIds.includes(c.id);
+              const checked = peopleIds.includes(c.id);
               return (
                 <label
                   key={c.id}
@@ -251,7 +256,7 @@ export default function RecordingForm({ classmates, initial }: Props) {
                   <input
                     type="checkbox"
                     checked={checked}
-                    onChange={() => toggleClassmate(c.id)}
+                    onChange={() => togglePerson(c.id)}
                     className="accent-forest"
                   />
                   {c.name}
@@ -260,9 +265,45 @@ export default function RecordingForm({ classmates, initial }: Props) {
             })}
           </div>
         )}
-        {classmateIds.length > 0 && (
+
+        {/* Teachers */}
+        <p className="font-serif text-xs text-ink-faint mb-2 uppercase tracking-wider">老师</p>
+        {teachers.length === 0 ? (
+          <p className="font-serif text-sm text-ink-faint italic">
+            还没有老师。
+          </p>
+        ) : (
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-48 overflow-y-auto pr-1">
+            {teachers.map((t) => {
+              const checked = peopleIds.includes(t.id);
+              return (
+                <label
+                  key={t.id}
+                  className={`flex items-center gap-2 rounded-md border px-3 py-2 cursor-pointer transition-colors font-serif text-sm ${
+                    checked
+                      ? "border-gold bg-gold/10 text-gold"
+                      : "border-border bg-paper text-ink-soft hover:bg-paper-deep/40"
+                  }`}
+                >
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    onChange={() => togglePerson(t.id)}
+                    className="accent-gold"
+                  />
+                  {t.name}
+                  {t.subject && (
+                    <span className="text-ink-faint/60 text-xs">{t.subject}</span>
+                  )}
+                </label>
+              );
+            })}
+          </div>
+        )}
+
+        {peopleIds.length > 0 && (
           <p className="mt-3 font-serif text-xs text-ink-faint">
-            已选 {classmateIds.length} 位
+            已选 {peopleIds.length} 位
           </p>
         )}
       </FormSection>

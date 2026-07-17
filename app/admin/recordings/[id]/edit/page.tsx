@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
 import { getRecordingByIdOrNum } from "@/lib/db/recordings";
 import { listClassmates } from "@/lib/db/classmates";
+import { listTeachers } from "@/lib/db/teachers";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
 import RecordingForm from "../../new/RecordingForm";
 import { PageHeader } from "@/components/site/PageHeader";
@@ -19,7 +20,10 @@ export default async function EditRecordingPage({ params }: Props) {
   const r = await getRecordingByIdOrNum(id);
   if (!r) notFound();
 
-  const classmates = await listClassmates();
+  const [classmates, teachers] = await Promise.all([
+    listClassmates(),
+    listTeachers(),
+  ]);
 
   return (
     <main className="mx-auto max-w-3xl px-5 sm:px-8 py-12">
@@ -59,7 +63,8 @@ export default async function EditRecordingPage({ params }: Props) {
       />
 
       <RecordingForm
-        classmates={classmates.map((c) => ({ id: c.id, name: c.name }))}
+        classmates={classmates.map((c) => ({ id: c.id, name: c.name, kind: "classmate" as const }))}
+        teachers={teachers.map((t) => ({ id: t.id, name: t.name, kind: "teacher" as const, subject: t.subject }))}
         initial={r}
       />
 

@@ -31,6 +31,24 @@ export interface Classmate {
 
 export type ClassmatePatch = Partial<Omit<Classmate, 'id' | 'created_at' | 'updated_at'>>;
 
+export interface Teacher {
+  id: string;
+  name: string;
+  subject: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export type TeacherPatch = Partial<Omit<Teacher, 'id' | 'created_at' | 'updated_at'>>;
+
+/**
+ * A resolved person that can appear in a recording's `people` list.
+ * Classmates link to their profile page; teachers show subject info.
+ */
+export type Person =
+  | { kind: 'classmate'; id: string; name: string; user_id: string }
+  | { kind: 'teacher'; id: string; name: string; subject: string };
+
 export interface Recording {
   id: string;
   /** Auto-increment integer used in /echoes/[num]. Distinct from the uuid `id`. */
@@ -44,7 +62,7 @@ export interface Recording {
   location: string | null;
   audio_path: string;
   duration_seconds: number | null;
-  classmates: string[]; // uuid[]
+  people: string[]; // uuid[] — classmates + teachers
   created_at: string;
   updated_at: string;
 }

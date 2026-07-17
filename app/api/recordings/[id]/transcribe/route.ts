@@ -1,28 +1,56 @@
 /**
  * POST /api/recordings/[id]/transcribe
  *
- * Streams audio transcription via OpenRouter Nemotron Omni model.
- * Returns SSE (text/event-stream) with incremental transcription text.
+ * Transcribes audio via Volcengine (豆包) ASR API.
+ * Two-step flow: submit audio URL → poll for result → stream text via SSE.
  *
- * Body: { prompt?: string }  — optional extra context for the model
+ * Body: {} (no parameters needed)
  */
 import { NextResponse } from 'next/server';
 import { getRecordingByIdOrNum } from '@/lib/db/recordings';
-import { getSupabaseAdmin } from '@/lib/db/supabase';
 import { getPublicUrl, BUCKET_RECORDINGS } from '@/lib/storage';
 
 export const dynamic = 'force-dynamic';
 
-const OPENROUTER_API_KEY = process.env.OPENROUTER_API_KEY;
-const OPENROUTER_MODEL = 'nvidia/nemotron-3-nano-omni-30b-a3b-reasoning:free';
+const VOLC_API_KEY = process.env.VOLC_ASR_API_KEY;
+const VOLC_RESOURCE_ID = process.env.VOLC_ASR_RESOURCE_ID ?? 'volc.seedasr.auc';
+const VOLC_SUBMIT_URL = 'https://openspeech.bytedance.com/api/v3/auc/bigmodel/submit';
+const VOLC_QUERY_URL = 'https://openspeech.bytedance.com/api/v3/auc/bigmodel/query';
+
+/** Detect audio format from file path extension. */
+function detectFormat(audioPath: string): string {
+  const ext = audioPath.split('.').pop()?.toLowerCase() ?? 'mp3';
+  const map: Record<string, string> = {
+    wav: 'wav', mp3: 'mp3', mpeg: 'mp3', ogg: 'ogg',
+    webm: 'webm', flac: 'flac', m4a: 'm4a', mp4: 'mp4', aac: 'aac',
+  };
+  return map[ext] ?? 'mp3';
+}
+
+/** Sleep helper. */
+function sleep(ms: number) {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+/**
+ * Build an SSE chunk that sends incremental text to the client.
+ * The client parses `data: {"text":"..."}` and appends to the textarea.
+ */
+function sseText(text: string): string {
+  return `data: ${JSON.stringify({ text })}\n\n`;
+}
+
+function sseDone(): string {
+  return `data: [DONE]\n\n`;
+}
 
 export async function POST(
-  request: Request,
+  _request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  if (!OPENROUTER_API_KEY) {
+  if (!VOLC_API_KEY) {
     return NextResponse.json(
-      { error: 'OPENROUTER_API_KEY 未配置' },
+      { error: 'VOLC_ASR_API_KEY 未配置' },
       { status: 500 }
     );
   }
@@ -34,112 +62,135 @@ export async function POST(
       return NextResponse.json({ error: '录音未找到' }, { status: 404 });
     }
 
-    // Download audio from Supabase Storage
-    const supabase = getSupabaseAdmin();
-    const { data: audioData, error: dlError } = await supabase.storage
-      .from(BUCKET_RECORDINGS)
-      .download(recording.audio_path);
+    const audioUrl = getPublicUrl(BUCKET_RECORDINGS, recording.audio_path);
+    const audioFormat = detectFormat(recording.audio_path);
+    const requestId = crypto.randomUUID();
 
-    if (dlError || !audioData) {
-      console.error('Failed to download audio:', dlError);
-      return NextResponse.json(
-        { error: '无法下载音频文件' },
-        { status: 500 }
-      );
-    }
-
-    // Convert to base64
-    const arrayBuffer = await audioData.arrayBuffer();
-    const base64 = Buffer.from(arrayBuffer).toString('base64');
-
-    // Determine audio format from path
-    const ext = recording.audio_path.split('.').pop()?.toLowerCase() ?? 'wav';
-    const formatMap: Record<string, string> = {
-      wav: 'wav',
-      mp3: 'mp3',
-      mpeg: 'mp3',
-      ogg: 'ogg',
-      webm: 'webm',
-      flac: 'flac',
-      m4a: 'm4a',
-      mp4: 'mp4',
-      aac: 'aac',
-    };
-    const audioFormat = formatMap[ext] ?? 'wav';
-
-    // Read optional prompt from request body
-    let extraPrompt = '';
-    try {
-      const body = await request.json();
-      extraPrompt = body.prompt ?? '';
-    } catch {
-      // no body
-    }
-
-    const systemPrompt = `你是一个专业的音频转写助手。你的任务是将用户提供的音频内容准确地转录为文字。
-请注意以下几点：
-1. 这些录音来自高中班级（安徽省青阳中学2019级2班），内容可能包含课堂、活动、日常对话等
-2. 请尽量准确地转录音频中的语音内容
-3. 使用中文进行转录（如果音频是中文的话）
-4. 保持原始的口语表达风格，不需要修改语法或措辞
-5. 适当标注说话人切换（如能辨别的话）
-6. 如果音频中有明显的非语音内容（如音乐、噪音），可以用方括号标注${extraPrompt ? `\n7. 额外要求：${extraPrompt}` : ''}`;
-
-    // Call OpenRouter with streaming
-    const response = await fetch('https://openrouter.ai/api/v1/chat/completions', {
+    // Step 1: Submit audio to Volcengine ASR
+    const submitRes = await fetch(VOLC_SUBMIT_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${OPENROUTER_API_KEY}`,
-        'HTTP-Referer': 'https://leaf.inon.space',
-        'X-Title': 'Leaf2Forest',
+        'x-api-key': VOLC_API_KEY,
+        'X-Api-Resource-Id': VOLC_RESOURCE_ID,
+        'X-Api-Request-Id': requestId,
+        'X-Api-Sequence': '-1',
       },
       body: JSON.stringify({
-        model: OPENROUTER_MODEL,
-        stream: true,
-        messages: [
-          {
-            role: 'system',
-            content: systemPrompt,
-          },
-          {
-            role: 'user',
-            content: [
-              {
-                type: 'text',
-                text: '请转写以下音频中的内容。',
-              },
-              {
-                type: 'input_audio',
-                input_audio: {
-                  data: base64,
-                  format: audioFormat,
-                },
-              },
-            ],
-          },
-        ],
+        user: { uid: 'Leaf2Forest' },
+        audio: {
+          url: audioUrl,
+          format: audioFormat,
+          codec: 'raw',
+          rate: 16000,
+          bits: 16,
+          channel: 1,
+        },
+        request: {
+          model_name: 'bigmodel',
+          enable_itn: true,
+          enable_punc: true,
+          enable_ddc: false,
+          enable_speaker_info: false,
+          enable_channel_split: false,
+          show_utterances: false,
+          vad_segment: false,
+          sensitive_words_filter: '',
+        },
       }),
     });
 
-    if (!response.ok) {
-      const errorText = await response.text();
-      console.error('OpenRouter API error:', response.status, errorText);
+    if (!submitRes.ok) {
+      const errText = await submitRes.text();
+      console.error('Volcengine submit failed:', submitRes.status, errText);
       return NextResponse.json(
-        { error: `AI 模型调用失败 (${response.status})`, detail: errorText },
+        { error: `语音识别提交失败 (${submitRes.status})` },
         { status: 502 }
       );
     }
 
-    if (!response.body) {
-      return NextResponse.json(
-        { error: '模型未返回流式响应' },
-        { status: 502 }
-      );
-    }
+    // Create SSE stream
+    const encoder = new TextEncoder();
+    const stream = new ReadableStream({
+      async start(controller) {
+        try {
+          // Send initial "processing" status
+          controller.enqueue(
+            encoder.encode(sseText(''))
+          );
 
-    // Pipe the SSE stream back to the client
-    return new Response(response.body, {
+          // Step 2: Poll for result
+          let fullText = '';
+          const maxAttempts = 30; // 30 × 1.5s = 45s max
+
+          for (let i = 0; i < maxAttempts; i++) {
+            await sleep(1500);
+
+            const queryRes = await fetch(VOLC_QUERY_URL, {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                'x-api-key': VOLC_API_KEY,
+                'X-Api-Resource-Id': VOLC_RESOURCE_ID,
+                'X-Api-Request-Id': requestId,
+              },
+              body: JSON.stringify({}),
+            });
+
+            if (!queryRes.ok) {
+              console.error('Volcengine query failed:', queryRes.status);
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ error: '查询结果失败' })}\n\n`)
+              );
+              break;
+            }
+
+            const queryData = await queryRes.json();
+            const statusMsg = queryRes.headers.get('x-api-message') ?? '';
+
+            if (statusMsg.includes('Processing')) {
+              // Still processing, send a dot to show progress
+              controller.enqueue(
+                encoder.encode(`data: ${JSON.stringify({ progress: '.' })}\n\n`)
+              );
+              continue;
+            }
+
+            // Got result
+            fullText = queryData.result?.text ?? '';
+
+            if (!fullText) {
+              controller.enqueue(
+                encoder.encode(sseText('（未能识别出文字内容）'))
+              );
+              break;
+            }
+
+            // Stream text character by character for the "typing" effect
+            // Group by ~3 chars for a natural feel
+            const chunkSize = 3;
+            for (let j = 0; j < fullText.length; j += chunkSize) {
+              const chunk = fullText.slice(0, j + chunkSize);
+              controller.enqueue(encoder.encode(sseText(chunk)));
+              await sleep(30); // 30ms between chunks for visible typing
+            }
+
+            break;
+          }
+
+          controller.enqueue(encoder.encode(sseDone()));
+          controller.close();
+        } catch (err) {
+          console.error('SSE stream error:', err);
+          controller.enqueue(
+            encoder.encode(`data: ${JSON.stringify({ error: '转写流异常' })}\n\n`)
+          );
+          controller.close();
+        }
+      },
+    });
+
+    return new Response(stream, {
       headers: {
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',

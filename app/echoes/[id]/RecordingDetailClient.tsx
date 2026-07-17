@@ -24,7 +24,7 @@ import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import type { Recording, Classmate } from "@/lib/db/types";
+import type { Recording, Person } from "@/lib/db/types";
 
 /* ── Types ── */
 
@@ -32,7 +32,7 @@ interface Props {
   recording: Recording;
   audioUrl: string;
   sizeBytes: number;
-  classmates: Classmate[];
+  people: Person[];
   dateLabel: string;
 }
 
@@ -218,7 +218,6 @@ function TranscriptionSection({
 
       const reader = res.body?.getReader();
       const decoder = new TextDecoder();
-      let accumulated = "";
 
       if (!reader) throw new Error("无法读取响应流");
 
@@ -236,16 +235,23 @@ function TranscriptionSection({
 
           try {
             const parsed = JSON.parse(payload);
-            const content = parsed.choices?.[0]?.delta?.content;
-            if (content) {
-              accumulated += content;
-              setText(accumulated);
-              // Auto-scroll textarea to bottom
+            // Volcengine ASR format: cumulative text
+            if (typeof parsed.text === "string") {
+              setText(parsed.text);
               if (textareaRef.current) {
                 textareaRef.current.scrollTop = textareaRef.current.scrollHeight;
               }
             }
-          } catch {
+            // Progress indicator (dot)
+            if (parsed.progress) {
+              // Just keep the streaming indicator visible
+            }
+            // Error from server
+            if (parsed.error) {
+              throw new Error(parsed.error);
+            }
+          } catch (e) {
+            if (e instanceof Error && e.message) throw e;
             // skip malformed JSON
           }
         }
@@ -407,7 +413,7 @@ export function RecordingDetailClient({
   recording,
   audioUrl,
   sizeBytes,
-  classmates,
+  people,
   dateLabel,
 }: Props) {
   const [data, setData] = useState(recording);
@@ -561,8 +567,8 @@ export function RecordingDetailClient({
           onSave={saveField}
         />
 
-        {/* Related classmates */}
-        {classmates.length > 0 && (
+        {/* Related people */}
+        {people.length > 0 && (
           <section>
             <div className="flex items-center gap-3 mb-4">
               <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
@@ -571,22 +577,31 @@ export function RecordingDetailClient({
               <div>
                 <div className="eyebrow">Present</div>
                 <h2 className="display-heading text-2xl text-ink leading-tight">
-                  参与的同学
+                  参与的人
                 </h2>
               </div>
             </div>
             <ul className="flex flex-wrap gap-2">
-              {classmates.map((c) => (
-                <li key={c.id}>
-                  <Link
-                    href={`/forest/${c.user_id}`}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
-                  >
-                    <LeafMotif variant="mark" className="h-3 w-3" />
-                    {c.name}
-                  </Link>
-                </li>
-              ))}
+              {people.map((p) =>
+                p.kind === 'classmate' ? (
+                  <li key={p.id}>
+                    <Link
+                      href={`/forest/${p.user_id}`}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
+                    >
+                      <LeafMotif variant="mark" className="h-3 w-3" />
+                      {p.name}
+                    </Link>
+                  </li>
+                ) : (
+                  <li key={p.id}>
+                    <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft">
+                      {p.name}
+                      <span className="text-ink-faint/60 text-xs">{p.subject}</span>
+                    </span>
+                  </li>
+                )
+              )}
             </ul>
           </section>
         )}

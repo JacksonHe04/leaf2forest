@@ -13,7 +13,7 @@ import {
 } from "lucide-react";
 import AudioPlayer from "@/components/features/AudioPlayer";
 import { getRecordingByIdOrNum } from "@/lib/db/recordings";
-import { listClassmatesByIds } from "@/lib/db/classmates";
+import { resolvePeople } from "@/lib/db/people";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { getCurrentUser } from "@/lib/db/supabase-server";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
@@ -54,9 +54,8 @@ export default async function RecordingPage({ params }: Props) {
     ? (matchedObj.metadata?.size as number | undefined) ?? 0
     : 0;
 
-  const classmateIds = recording.classmates ?? [];
-  const classmates =
-    classmateIds.length > 0 ? await listClassmatesByIds(classmateIds) : [];
+  const peopleIds = recording.people ?? [];
+  const people = peopleIds.length > 0 ? await resolvePeople(peopleIds) : [];
 
   const dateLabel = new Date(recording.date).toLocaleDateString("zh-CN", {
     year: "numeric",
@@ -87,7 +86,7 @@ export default async function RecordingPage({ params }: Props) {
             recording={recording}
             audioUrl={audioUrl}
             sizeBytes={sizeBytes}
-            classmates={classmates}
+            people={people}
             dateLabel={dateLabel}
           />
         ) : (
@@ -185,24 +184,33 @@ export default async function RecordingPage({ params }: Props) {
                 </DetailSection>
               )}
 
-              {classmates.length > 0 && (
+              {people.length > 0 && (
                 <DetailSection
                   icon={<Users className="h-4 w-4" />}
-                  title="参与的同学"
+                  title="参与的人"
                   eyebrow="Present"
                 >
                   <ul className="flex flex-wrap gap-2">
-                    {classmates.map((c) => (
-                      <li key={c.id}>
-                        <Link
-                          href={`/forest/${c.user_id}`}
-                          className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
-                        >
-                          <LeafMotif variant="mark" className="h-3 w-3" />
-                          {c.name}
-                        </Link>
-                      </li>
-                    ))}
+                    {people.map((p) =>
+                      p.kind === 'classmate' ? (
+                        <li key={p.id}>
+                          <Link
+                            href={`/forest/${p.user_id}`}
+                            className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
+                          >
+                            <LeafMotif variant="mark" className="h-3 w-3" />
+                            {p.name}
+                          </Link>
+                        </li>
+                      ) : (
+                        <li key={p.id}>
+                          <span className="inline-flex items-center gap-1.5 rounded-full border border-gold/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft">
+                            {p.name}
+                            <span className="text-ink-faint/60 text-xs">{p.subject}</span>
+                          </span>
+                        </li>
+                      )
+                    )}
                   </ul>
                 </DetailSection>
               )}
