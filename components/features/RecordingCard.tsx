@@ -73,6 +73,13 @@ export default function RecordingCard({
         isEmpty && "ring-1 ring-gold/40"
       )}
     >
+      {/* Full-card click target */}
+      <Link
+        href={`/echoes/${recording.num}`}
+        className="absolute inset-0 z-[1]"
+        aria-label={recording.title}
+      />
+
       {/* Top strip — date + location, like a card catalog header */}
       <div className="flex items-center justify-between border-b border-border/70 bg-paper-deep/40 px-5 py-2.5">
         <div className="flex items-center gap-1.5 font-serif text-xs text-ink-soft">
@@ -94,13 +101,8 @@ export default function RecordingCard({
       </div>
 
       <div className="p-5">
-        <h3 className="display-heading text-xl text-ink leading-tight">
-          <Link
-            href={`/echoes/${recording.num}`}
-            className="transition-colors hover:text-forest"
-          >
-            {recording.title}
-          </Link>
+        <h3 className="display-heading text-xl text-ink leading-tight group-hover:text-forest transition-colors">
+          {recording.title}
         </h3>
 
         {(recording.description || recording.background) && (
@@ -109,8 +111,8 @@ export default function RecordingCard({
           </p>
         )}
 
-        {/* Player */}
-        <div className="mt-4">
+        {/* Player — z-10 to stay above the click overlay */}
+        <div className="relative z-10 mt-4">
           {isEmpty ? (
             <div className="rounded-md border border-gold/40 bg-paper-deep/50 px-3 py-2 text-xs text-ink-faint font-serif">
               源文件是 0 字节，跳过播放。
