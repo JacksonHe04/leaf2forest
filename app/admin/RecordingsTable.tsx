@@ -7,6 +7,7 @@ import {
   AlertCircle,
   Trash2,
   Plus,
+  ExternalLink,
 } from "lucide-react";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,11 @@ function fmtDuration(s: number | null) {
   const sec = Math.floor(s % 60);
   return `${m}:${sec.toString().padStart(2, "0")}`;
 }
+
+/* ── Sticky column pixel widths ── */
+const IDX_W = 48;    // # column
+const TITLE_W = 144;  // title column (w-36)
+const ACT_W = 44;     // each action column
 
 /* ── Column definitions ── */
 
@@ -73,10 +79,7 @@ function resolveClassmateNames(ids: string[], all: Classmate[]): string {
 }
 
 function parseClassmateNames(input: string, all: Classmate[]): string[] {
-  const names = input
-    .split(/[,，、;\s]+/)
-    .map((n) => n.trim())
-    .filter(Boolean);
+  const names = input.split(/[,，、;\s]+/).map((n) => n.trim()).filter(Boolean);
   const nameMap = new Map(all.map((c) => [c.name, c.id]));
   const ids: string[] = [];
   for (const name of names) {
@@ -110,12 +113,8 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
   const displayValue = useCallback(
     (rec: Recording, key: string): string => {
-      if (key === "classmates") {
-        return resolveClassmateNames(rec.classmates, classmates);
-      }
-      if (key === "duration_seconds") {
-        return fmtDuration(rec.duration_seconds);
-      }
+      if (key === "classmates") return resolveClassmateNames(rec.classmates, classmates);
+      if (key === "duration_seconds") return fmtDuration(rec.duration_seconds);
       return getVal(rec, key);
     },
     [classmates]
@@ -124,16 +123,13 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
   async function saveCell(rec: Recording, col: string, rawValue: string) {
     const key = ck(rec.id, col);
     setStatuses((p) => ({ ...p, [key]: "saving" }));
-
     try {
       const payload: Record<string, unknown> = {};
-
       if (col === "classmates") {
         payload.classmates = parseClassmateNames(rawValue, classmates);
       } else {
         payload[col] = rawValue === "" ? null : rawValue;
       }
-
       const res = await fetch(`/api/recordings/${rec.num}`, {
         method: "PUT",
         headers: { "Content-Type": "application/json" },
@@ -141,13 +137,10 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
       });
       const json = await res.json();
       if (json.status !== "success") throw new Error("保存失败");
-
       setRecordings((prev) =>
         prev.map((r) => {
           if (r.id !== rec.id) return r;
-          if (col === "classmates") {
-            return { ...r, classmates: parseClassmateNames(rawValue, classmates) };
-          }
+          if (col === "classmates") return { ...r, classmates: parseClassmateNames(rawValue, classmates) };
           return { ...r, [col]: rawValue || null };
         })
       );
@@ -204,6 +197,9 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
   const groups = Array.from(new Set(DATA_COLUMNS.map((c) => c.group)));
 
+  const stickyBg = "bg-paper/95 backdrop-blur-sm";
+  const stickyBgHeader = "bg-paper-deep/95 backdrop-blur-sm";
+
   return (
     <div className="surface-paper rounded-md overflow-hidden">
       {/* Toolbar */}
@@ -221,44 +217,48 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
 
       <div className="overflow-x-auto">
         <table className="w-max min-w-full">
-          {/* Group header */}
           <thead>
+            {/* Group header */}
             <tr className="border-b border-border/50 bg-paper-deep/60">
-              <th
-                className="sticky left-0 z-20 bg-paper-deep/95 backdrop-blur-sm px-2 py-1.5 font-serif text-xs text-ink-faint border-r border-border/40"
-              >
-                播放
+              <th className={`sticky left-0 z-20 ${stickyBgHeader} px-2 py-1.5 font-serif text-xs text-ink-faint border-r border-border/40`} style={{ width: IDX_W }}>
+                #
               </th>
               {groups.map((g) => {
                 const cols = DATA_COLUMNS.filter((c) => c.group === g);
                 return (
-                  <th
-                    key={g}
-                    colSpan={cols.length}
-                    className="px-2 py-1.5 font-serif text-xs uppercase tracking-wider text-forest/70 border-l border-border/30 text-center"
-                  >
+                  <th key={g} colSpan={cols.length} className="px-2 py-1.5 font-serif text-xs uppercase tracking-wider text-forest/70 border-l border-border/30 text-center">
                     {g}
                   </th>
                 );
               })}
-              <th className="px-2 py-1.5 font-serif text-xs text-ink-faint border-l border-border/30 w-16">
+              <th className={`sticky right-0 z-20 ${stickyBgHeader} px-1 py-1.5 font-serif text-xs text-ink-faint border-l border-border/40 text-center`} style={{ width: ACT_W * 2 }}>
                 操作
               </th>
             </tr>
-            {/* Column headers */}
+            {/* Column header */}
             <tr className="border-b border-border/70 bg-paper-deep/40">
-              <th className="sticky left-0 z-20 bg-paper-deep/95 backdrop-blur-sm px-2 py-2 font-serif text-xs text-ink-faint border-r border-border/40 w-12">
+              <th className={`sticky left-0 z-20 ${stickyBgHeader} px-2 py-2 font-serif text-xs text-ink-faint border-r border-border/40 tabular-nums`} style={{ width: IDX_W }}>
                 #
               </th>
-              {DATA_COLUMNS.map((col) => (
-                <th
-                  key={col.key}
-                  className={`${col.width} px-2 py-2 font-serif text-xs uppercase tracking-wider text-ink-faint border-l border-border/20 whitespace-nowrap`}
-                >
-                  {col.label}
-                </th>
-              ))}
-              <th className="px-2 py-2 font-serif text-xs text-ink-faint border-l border-border/20 w-16" />
+              {DATA_COLUMNS.map((col) => {
+                const isTitle = col.key === "title";
+                return (
+                  <th
+                    key={col.key}
+                    className={`${col.width} px-2 py-2 font-serif text-xs uppercase tracking-wider text-ink-faint border-l border-border/20 whitespace-nowrap ${isTitle ? `sticky z-10 ${stickyBgHeader} border-r border-border/30` : ""}`}
+                    style={isTitle ? { left: IDX_W } : undefined}
+                  >
+                    {col.label}
+                  </th>
+                );
+              })}
+              {/* Sticky right: preview + delete headers */}
+              <th className={`sticky right-0 z-20 ${stickyBgHeader} px-1 py-2 font-serif text-xs text-ink-faint border-l border-border/40`} style={{ width: ACT_W }}>
+                <ExternalLink className="h-3 w-3 inline-block" />
+              </th>
+              <th className={`sticky z-20 ${stickyBgHeader} px-1 py-2 font-serif text-xs text-ink-faint border-l border-border/40`} style={{ width: ACT_W, right: ACT_W }}>
+                <Trash2 className="h-3 w-3 inline-block" />
+              </th>
             </tr>
           </thead>
 
@@ -270,17 +270,14 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                   key={rec.id}
                   className={`border-b border-border/40 hover:bg-paper-deep/30 transition-colors ${isDeleting ? "opacity-50" : ""}`}
                 >
-                  {/* Sticky: row number */}
-                  <td className="sticky left-0 z-10 bg-paper/95 backdrop-blur-sm px-2 py-1.5 font-serif text-xs text-ink-faint border-r border-border/40 tabular-nums">
+                  {/* Sticky #: num */}
+                  <td className={`sticky left-0 z-10 ${stickyBg} px-2 py-1.5 font-serif text-xs text-ink-faint border-r border-border/40 tabular-nums`} style={{ width: IDX_W }}>
                     {rec.num}
                   </td>
 
-                  {/* Audio player */}
+                  {/* Audio player (non-sticky, scrolls with content) */}
                   <td className="px-1 py-1 border-l border-border/15">
-                    <InlineAudioPlayer
-                      src={audioUrl(rec.audio_path)}
-                      sizeBytes={rec.audio_path ? 1 : 0}
-                    />
+                    <InlineAudioPlayer src={audioUrl(rec.audio_path)} sizeBytes={rec.audio_path ? 1 : 0} />
                   </td>
 
                   {/* Data cells */}
@@ -290,9 +287,14 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                     const status = statuses[key] || "idle";
                     const value = displayValue(rec, col.key);
                     const isEditable = col.editable;
+                    const isTitle = col.key === "title";
 
                     return (
-                      <td key={col.key} className={`${col.width} px-1 py-1 border-l border-border/15`}>
+                      <td
+                        key={col.key}
+                        className={`${col.width} px-1 py-1 border-l border-border/15 ${isTitle ? `sticky z-10 ${stickyBg} border-r border-border/30 font-medium` : ""}`}
+                        style={isTitle ? { left: IDX_W } : undefined}
+                      >
                         {isEditing && isEditable ? (
                           <Input
                             ref={inputRef}
@@ -311,7 +313,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                               isEditable
                                 ? "cursor-pointer text-ink-soft hover:bg-paper-deep/60"
                                 : "text-ink-faint cursor-default"
-                            } ${col.key === "title" ? "font-medium text-ink" : ""}`}
+                            } ${isTitle ? "font-medium text-ink" : ""}`}
                             title={isEditable ? "点击编辑" : value}
                           >
                             {status === "saving" && <Loader2 className="h-3 w-3 animate-spin text-forest mr-1 shrink-0" />}
@@ -326,8 +328,20 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                     );
                   })}
 
-                  {/* Actions */}
-                  <td className="px-2 py-1 border-l border-border/15 text-center">
+                  {/* Sticky right: preview */}
+                  <td className={`sticky right-0 z-10 ${stickyBg} px-1 py-1 border-l border-border/30 text-center`} style={{ width: ACT_W }}>
+                    <Link
+                      href={`/echoes/${rec.num}`}
+                      target="_blank"
+                      className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-forest hover:bg-forest/10 transition-colors"
+                      title="预览公开页"
+                    >
+                      <ExternalLink className="h-3.5 w-3.5" />
+                    </Link>
+                  </td>
+
+                  {/* Sticky right: delete */}
+                  <td className={`sticky z-10 ${stickyBg} px-1 py-1 border-l border-border/30 text-center`} style={{ width: ACT_W, right: ACT_W }}>
                     <button
                       type="button"
                       onClick={() => handleDelete(rec)}
@@ -335,11 +349,7 @@ export function RecordingsTable({ recordings: initialRecs, classmates }: Props) 
                       className="inline-flex items-center justify-center h-7 w-7 rounded text-ink-faint hover:text-red-500 hover:bg-red-50 transition-colors"
                       title="删除"
                     >
-                      {isDeleting ? (
-                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                      ) : (
-                        <Trash2 className="h-3.5 w-3.5" />
-                      )}
+                      {isDeleting ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Trash2 className="h-3.5 w-3.5" />}
                     </button>
                   </td>
                 </tr>

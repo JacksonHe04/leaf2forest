@@ -242,13 +242,15 @@ export function MineClient({ classmate }: Props) {
             {/* Basic info */}
             <FormSection title="基本信息" eyebrow="01 / Identity">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <Field label={LABELS.name} required>
+                <Field label={LABELS.name}>
                   <Input
-                    required
+                    readOnly
                     value={values.name}
-                    onChange={(e) => set("name", e.target.value)}
-                    className="font-serif bg-paper border-border"
+                    className="font-serif bg-paper-deep/50 border-border text-ink-faint cursor-not-allowed"
                   />
+                  <p className="mt-1 font-serif text-[11px] text-ink-faint">
+                    姓名由管理员统一维护，不可自行修改
+                  </p>
                 </Field>
                 <Field label={LABELS.gender}>
                   <Select
