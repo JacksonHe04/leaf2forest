@@ -66,11 +66,13 @@ function PlayerCore({
   variant: "inline" | "feature";
 }) {
   const audioRef = useRef<HTMLAudioElement>(null);
+  const barRef = useRef<HTMLDivElement>(null);
   const [duration, setDuration] = useState<number | null>(null);
   const [currentTime, setCurrentTime] = useState(0);
   const [isPlaying, setIsPlaying] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   useEffect(() => {
     const audio = audioRef.current;
@@ -127,6 +129,35 @@ function PlayerCore({
     }
     setIsPlaying(!isPlaying);
   }
+
+  function seekTo(clientX: number) {
+    const bar = barRef.current;
+    const a = audioRef.current;
+    if (!bar || !a || !duration || !Number.isFinite(duration)) return;
+    const rect = bar.getBoundingClientRect();
+    const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+    a.currentTime = ratio * duration;
+    setCurrentTime(a.currentTime);
+  }
+
+  function onBarMouseDown(e: React.MouseEvent) {
+    e.preventDefault();
+    seekTo(e.clientX);
+    setIsDragging(true);
+  }
+
+  // Global drag handlers — attached when isDragging becomes true
+  useEffect(() => {
+    if (!isDragging) return;
+    const onMove = (e: MouseEvent) => seekTo(e.clientX);
+    const onUp = () => setIsDragging(false);
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [isDragging, duration]);
 
   function fmt(t: number) {
     const m = Math.floor(t / 60);
@@ -189,11 +220,27 @@ function PlayerCore({
               }}
             />
           ) : (
-            <div className="relative h-1.5 rounded-full bg-paper-deep overflow-hidden">
+            <div
+              ref={barRef}
+              onMouseDown={onBarMouseDown}
+              className="relative h-1.5 rounded-full bg-paper-deep cursor-pointer group"
+              role="slider"
+              aria-label="音频进度"
+              aria-valuemin={0}
+              aria-valuemax={100}
+              aria-valuenow={Math.round(progressPct)}
+            >
               <motion.div
-                className="absolute left-0 top-0 h-full bg-gradient-to-r from-forest to-gold"
+                className="absolute left-0 top-0 h-full bg-gradient-to-r from-forest to-gold rounded-full"
                 style={{ width: `${progressPct}%` }}
                 transition={{ ease: "linear", duration: 0.1 }}
+              />
+              <div
+                className={cn(
+                  "absolute top-1/2 -translate-y-1/2 h-3 w-3 rounded-full bg-forest shadow-sm transition-opacity",
+                  isDragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+                )}
+                style={{ left: `calc(${progressPct}% - 6px)` }}
               />
             </div>
           )}

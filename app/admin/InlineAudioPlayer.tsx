@@ -22,6 +22,7 @@ export function InlineAudioPlayer({
   const [current, setCurrent] = useState(0);
   const [duration, setDuration] = useState(0);
   const [ready, setReady] = useState(false);
+  const [dragging, setDragging] = useState(false);
 
   useEffect(() => {
     const el = audioRef.current;
@@ -46,16 +47,38 @@ export function InlineAudioPlayer({
   }, []);
 
   const seek = useCallback(
-    (e: React.MouseEvent) => {
+    (clientX: number) => {
       const bar = barRef.current;
       const el = audioRef.current;
       if (!bar || !el || !duration) return;
       const rect = bar.getBoundingClientRect();
-      const ratio = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+      const ratio = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
       el.currentTime = ratio * duration;
+      setCurrent(el.currentTime);
     },
     [duration]
   );
+
+  const onBarMouseDown = useCallback(
+    (e: React.MouseEvent) => {
+      e.preventDefault();
+      seek(e.clientX);
+      setDragging(true);
+    },
+    [seek]
+  );
+
+  useEffect(() => {
+    if (!dragging) return;
+    const onMove = (e: MouseEvent) => seek(e.clientX);
+    const onUp = () => setDragging(false);
+    document.addEventListener("mousemove", onMove);
+    document.addEventListener("mouseup", onUp);
+    return () => {
+      document.removeEventListener("mousemove", onMove);
+      document.removeEventListener("mouseup", onUp);
+    };
+  }, [dragging, seek]);
 
   const toggle = useCallback(() => {
     const el = audioRef.current;
@@ -99,7 +122,7 @@ export function InlineAudioPlayer({
       </button>
       <div
         ref={barRef}
-        onClick={seek}
+        onMouseDown={onBarMouseDown}
         className="relative flex-1 h-1.5 bg-ink-faint/15 rounded-full cursor-pointer group"
       >
         <div
@@ -107,7 +130,9 @@ export function InlineAudioPlayer({
           style={{ width: `${pct}%` }}
         />
         <div
-          className="absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-forest opacity-0 group-hover:opacity-100 transition-opacity shadow-sm"
+          className={`absolute top-1/2 -translate-y-1/2 h-2.5 w-2.5 rounded-full bg-forest shadow-sm transition-opacity ${
+            dragging ? "opacity-100" : "opacity-0 group-hover:opacity-100"
+          }`}
           style={{ left: `calc(${pct}% - 5px)` }}
         />
       </div>
