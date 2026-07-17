@@ -12,9 +12,11 @@ function table() {
  * follows alphabetical (A→Z) order rather than Unicode radical order.
  */
 function compareByPinyin(a: string, b: string): number {
-  const pa = pinyin(a, { toneType: 'none', type: 'array' }).join('').toLowerCase();
-  const pb = pinyin(b, { toneType: 'none', type: 'array' }).join('').toLowerCase();
-  return pa.localeCompare(pb);
+  const pa = pinyin(a, { toneType: 'none', type: 'array' }).join(' ').toLowerCase();
+  const pb = pinyin(b, { toneType: 'none', type: 'array' }).join(' ').toLowerCase();
+  if (pa < pb) return -1;
+  if (pa > pb) return 1;
+  return 0;
 }
 
 export async function listClassmates(): Promise<Classmate[]> {
