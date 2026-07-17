@@ -14,12 +14,12 @@ import { SITE } from "@/lib/site";
  * Login page — authenticates via /api/auth/login.
  *
  * Username is the classmate's pinyin slug (e.g. "chenhao").
- * On success, redirects to the `redirect` query param or /my-leaf.
+ * On success, redirects to the `redirect` query param or /mine.
  */
 export default function LoginPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") || "/my-leaf";
+  const redirectTo = searchParams.get("redirect") || "/mine";
 
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");

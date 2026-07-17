@@ -65,7 +65,7 @@ export default function ChangePasswordPage() {
   return (
     <main className="mx-auto max-w-md px-5 sm:px-8 py-12">
       <Link
-        href="/my-leaf"
+        href="/mine"
         className="group inline-flex items-center gap-1.5 font-serif text-sm text-ink-soft hover:text-forest transition-colors"
       >
         <ArrowLeft className="h-3.5 w-3.5 transition-transform group-hover:-translate-x-1" />

@@ -2,7 +2,14 @@
 
 import Link from "next/link";
 import { motion } from "framer-motion";
-import { MapPin, Briefcase } from "lucide-react";
+import {
+  MapPin,
+  Briefcase,
+  GraduationCap,
+  Phone,
+  MessageCircle,
+  AtSign,
+} from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import type { Classmate } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
@@ -18,11 +25,55 @@ interface Props {
  * ClassmateCard — a single specimen-page entry in the Forest directory.
  *
  * Design intent: each classmate is a "leaf" pressed onto a paper card.
- * The card is intentionally light on data — just enough to recognize
- * someone at a glance. Full details live on /forest/[id].
+ * The card shows enough detail to recognize someone at a glance:
+ * avatar, name, city, education, work, and contact hints.
+ * Full details live on /forest/[id].
  */
 export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
   const initials = classmate.name.slice(0, 1);
+
+  // Collect education entries (highest degree first)
+  const eduEntries: { school: string; major: string }[] = [];
+  if (classmate.doctor_university)
+    eduEntries.push({
+      school: classmate.doctor_university,
+      major: classmate.doctor_major ?? "",
+    });
+  if (classmate.master_university)
+    eduEntries.push({
+      school: classmate.master_university,
+      major: classmate.master_major ?? "",
+    });
+  if (classmate.bachelor_university)
+    eduEntries.push({
+      school: classmate.bachelor_university,
+      major: classmate.bachelor_major ?? "",
+    });
+
+  // Contact methods
+  const contacts: { icon: React.ReactNode; value: string }[] = [];
+  if (classmate.phone)
+    contacts.push({
+      icon: <Phone className="h-3 w-3" />,
+      value: classmate.phone,
+    });
+  if (classmate.wechat)
+    contacts.push({
+      icon: <MessageCircle className="h-3 w-3" />,
+      value: classmate.wechat,
+    });
+  if (classmate.qq)
+    contacts.push({
+      icon: <AtSign className="h-3 w-3" />,
+      value: classmate.qq,
+    });
+
+  const hasMeta =
+    classmate.city ||
+    eduEntries.length > 0 ||
+    classmate.employer ||
+    classmate.industry ||
+    contacts.length > 0;
 
   return (
     <motion.div
@@ -68,11 +119,23 @@ export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
           )}
         </div>
 
-        {/* Bottom: meta row, like a herbarium label */}
+        {/* Bottom: meta rows, like a herbarium label */}
         <div className="border-t border-border/60 bg-paper-deep/30 px-6 py-3 space-y-1.5">
           {classmate.city && (
-            <MetaLine icon={<MapPin className="h-3.5 w-3.5" />} text={classmate.city} />
+            <MetaLine
+              icon={<MapPin className="h-3.5 w-3.5" />}
+              text={classmate.city}
+            />
           )}
+
+          {eduEntries.map((edu) => (
+            <MetaLine
+              key={edu.school}
+              icon={<GraduationCap className="h-3.5 w-3.5" />}
+              text={edu.major ? `${edu.school} · ${edu.major}` : edu.school}
+            />
+          ))}
+
           {(classmate.employer || classmate.industry) && (
             <MetaLine
               icon={<Briefcase className="h-3.5 w-3.5" />}
@@ -83,15 +146,29 @@ export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
               }
             />
           )}
-          {!classmate.city &&
-            !classmate.employer &&
-            !classmate.industry && (
-              <MetaLine
-                icon={<span className="text-gold">·</span>}
-                text="资料待补充"
-                faint
-              />
-            )}
+
+          {contacts.length > 0 && (
+            <div className="flex items-center gap-3 flex-wrap">
+              {contacts.map((c, i) => (
+                <span
+                  key={i}
+                  className="inline-flex items-center gap-1 text-[11px] font-serif text-ink-soft"
+                  title={c.value}
+                >
+                  <span className="text-forest">{c.icon}</span>
+                  <span className="truncate max-w-[5rem]">{c.value}</span>
+                </span>
+              ))}
+            </div>
+          )}
+
+          {!hasMeta && (
+            <MetaLine
+              icon={<span className="text-gold">·</span>}
+              text="资料待补充"
+              faint
+            />
+          )}
         </div>
       </Link>
     </motion.div>
@@ -114,7 +191,7 @@ function MetaLine({
         faint ? "text-ink-faint italic" : "text-ink-soft"
       )}
     >
-      <span className="text-forest">{icon}</span>
+      <span className="text-forest shrink-0">{icon}</span>
       <span className="truncate">{text}</span>
     </div>
   );

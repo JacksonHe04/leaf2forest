@@ -30,7 +30,7 @@ export const NAV_ITEMS: NavItem[] = [
   { label: "首页", href: "/", description: "档案馆入口" },
   { label: "Forest", href: "/forest", description: "同学档案 · 一片森林" },
   { label: "Echoes", href: "/echoes", description: "声音档案 · 高中时期的回声" },
-  { label: "我的叶子", href: "/my-leaf", description: "登录后维护个人资料" },
+  { label: "我的叶子", href: "/mine", description: "登录后维护个人资料" },
 ];
 
 /**
@@ -56,7 +56,7 @@ export const FOOTER_LINKS: { title: string; items: NavItem[] }[] = [
     title: "成员",
     items: [
       { label: "登录", href: "/login" },
-      { label: "我的叶子", href: "/my-leaf" },
+      { label: "我的叶子", href: "/mine" },
     ],
   },
 ];

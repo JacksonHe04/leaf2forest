@@ -1,15 +1,28 @@
 import { getSupabaseAdmin } from './supabase';
 import type { Classmate, ClassmatePatch } from './types';
 import { slugFromName } from '../slug';
+import { pinyin } from 'pinyin-pro';
 
 function table() {
   return getSupabaseAdmin().from('classmates');
 }
 
+/**
+ * Compare two Chinese names by their pinyin spelling so that the list
+ * follows alphabetical (A→Z) order rather than Unicode radical order.
+ */
+function compareByPinyin(a: string, b: string): number {
+  const pa = pinyin(a, { toneType: 'none', type: 'array' }).join('').toLowerCase();
+  const pb = pinyin(b, { toneType: 'none', type: 'array' }).join('').toLowerCase();
+  return pa.localeCompare(pb);
+}
+
 export async function listClassmates(): Promise<Classmate[]> {
-  const { data, error } = await table().select('*').order('name');
+  const { data, error } = await table().select('*');
   if (error) throw error;
-  return (data ?? []) as Classmate[];
+  return ((data ?? []) as Classmate[]).sort((a, b) =>
+    compareByPinyin(a.name, b.name)
+  );
 }
 
 export async function getClassmateByUserId(
