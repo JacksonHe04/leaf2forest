@@ -4,6 +4,8 @@
  */
 export interface Classmate {
   id: string;
+  /** URL-safe pinyin of the name, e.g. "chenhao". Unique, used in /forest/[userId]. */
+  user_id: string;
   name: string;
   avatar_path: string | null;
   gender: string | null;
@@ -29,6 +31,8 @@ export type ClassmatePatch = Partial<Omit<Classmate, 'id' | 'created_at' | 'upda
 
 export interface Recording {
   id: string;
+  /** Auto-increment integer used in /echoes/[num]. Distinct from the uuid `id`. */
+  num: number;
   date: string; // ISO date (YYYY-MM-DD)
   time: string | null; // HH:MM:SS
   title: string;
@@ -44,5 +48,5 @@ export interface Recording {
 }
 
 export type RecordingPatch = Partial<
-  Omit<Recording, 'id' | 'created_at' | 'updated_at'>
+  Omit<Recording, 'id' | 'num' | 'created_at' | 'updated_at'>
 >;

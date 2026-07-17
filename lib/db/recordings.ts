@@ -38,6 +38,15 @@ export async function getRecording(id: string): Promise<Recording | null> {
   return (data ?? null) as Recording | null;
 }
 
+export async function getRecordingByNum(num: number): Promise<Recording | null> {
+  const { data, error } = await table()
+    .select('*')
+    .eq('num', num)
+    .maybeSingle();
+  if (error) throw error;
+  return (data ?? null) as Recording | null;
+}
+
 export async function createRecording(patch: RecordingPatch): Promise<Recording> {
   const { data, error } = await table()
     .insert(patch)
