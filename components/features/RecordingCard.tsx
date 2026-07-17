@@ -50,7 +50,7 @@ export default function RecordingCard({
         <div className="flex flex-col gap-2">
           <div className="flex items-center justify-between gap-3">
             <Link
-              href={`/echoes/${recording.id}`}
+              href={`/echoes/${recording.num}`}
               className="font-serif text-base text-ink hover:text-forest transition-colors"
             >
               {recording.title}
@@ -109,7 +109,7 @@ export default function RecordingCard({
       <div className="p-5">
         <h3 className="display-heading text-xl text-ink leading-tight">
           <Link
-            href={`/echoes/${recording.id}`}
+            href={`/echoes/${recording.num}`}
             className="transition-colors hover:text-forest"
           >
             {recording.title}

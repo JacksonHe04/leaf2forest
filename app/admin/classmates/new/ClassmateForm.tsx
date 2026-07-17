@@ -117,7 +117,7 @@ export default function ClassmateForm({ initial }: Props) {
       if (avatar_path) payload.avatar_path = avatar_path;
 
       const url = isEdit
-        ? `/api/classmates/${initial!.id}`
+        ? `/api/classmates/${initial!.user_id}`
         : "/api/classmates";
       const method = isEdit ? "PUT" : "POST";
 

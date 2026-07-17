@@ -10,7 +10,7 @@ import {
   Phone,
   User as UserIcon,
 } from "lucide-react";
-import { getClassmate } from "@/lib/db/classmates";
+import { getClassmate, getClassmateByUserId } from "@/lib/db/classmates";
 import { listRecordings } from "@/lib/db/recordings";
 import { getPublicUrl, BUCKET_IMAGES } from "@/lib/storage";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -27,7 +27,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const c = await getClassmate(id);
+  const c = (await getClassmateByUserId(id)) ?? (await getClassmate(id));
   if (!c) return { title: "未找到同学" };
   return {
     title: `${c.name} · 同学档案`,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function ClassmateProfilePage({ params }: Props) {
   const { id } = await params;
-  const c = await getClassmate(id);
+  const c = (await getClassmateByUserId(id)) ?? (await getClassmate(id));
   if (!c) notFound();
 
   const avatarUrl = c.avatar_path
@@ -45,7 +45,7 @@ export default async function ClassmateProfilePage({ params }: Props) {
     : null;
 
   // Recordings this classmate appears in.
-  const recordings = await listRecordings({ classmateId: id });
+  const recordings = await listRecordings({ classmateId: c.id });
   const initials = c.name.slice(0, 1);
 
   const educationRows: { label: string; university: string | null; major: string | null }[] = [

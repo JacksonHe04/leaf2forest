@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getRecording } from "@/lib/db/recordings";
+import { getRecording, getRecordingByNum } from "@/lib/db/recordings";
 import { listClassmates } from "@/lib/db/classmates";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
 import RecordingForm from "../../new/RecordingForm";
@@ -16,7 +16,7 @@ interface Props {
 
 export default async function EditRecordingPage({ params }: Props) {
   const { id } = await params;
-  const r = await getRecording(id);
+  const r = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
   if (!r) notFound();
 
   const classmates = await listClassmates();
@@ -50,7 +50,7 @@ export default async function EditRecordingPage({ params }: Props) {
               asChild
               className="font-serif border-gold/40 text-gold hover:bg-paper-deep"
             >
-              <Link href={`/echoes/${r.id}`} target="_blank">
+              <Link href={`/echoes/${r.num}`} target="_blank">
                 <ExternalLink className="h-3.5 w-3.5" />
                 在前台查看
               </Link>

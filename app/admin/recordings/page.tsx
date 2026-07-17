@@ -149,13 +149,13 @@ export default async function AdminRecordingsPage() {
                         </TableCell>
                         <TableCell className="text-right whitespace-nowrap">
                           <Link
-                            href={`/echoes/${r.id}`}
+                            href={`/echoes/${r.num}`}
                             className="inline-flex items-center gap-1 rounded-md border border-forest/40 bg-paper-soft px-2.5 py-1 font-serif text-xs text-forest hover:bg-paper-deep transition-colors mr-1.5"
                           >
                             查看
                           </Link>
                           <Link
-                            href={`/admin/recordings/${r.id}/edit`}
+                            href={`/admin/recordings/${r.num}/edit`}
                             className="inline-flex items-center gap-1 rounded-md bg-forest px-2.5 py-1 font-serif text-xs text-paper-soft hover:bg-forest-deep transition-colors"
                           >
                             编辑

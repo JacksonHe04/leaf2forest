@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { getClassmate } from "@/lib/db/classmates";
+import { getClassmate, getClassmateByUserId } from "@/lib/db/classmates";
 import { getPublicUrl, BUCKET_IMAGES } from "@/lib/storage";
 import ClassmateForm from "../../new/ClassmateForm";
 import { PageHeader } from "@/components/site/PageHeader";
@@ -16,7 +16,7 @@ interface Props {
 
 export default async function EditClassmatePage({ params }: Props) {
   const { id } = await params;
-  const c = await getClassmate(id);
+  const c = (await getClassmateByUserId(id)) ?? (await getClassmate(id));
   if (!c) notFound();
 
   const avatarUrl = c.avatar_path

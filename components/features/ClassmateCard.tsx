@@ -35,7 +35,7 @@ export function ClassmateCard({ classmate, avatarUrl, index = 0 }: Props) {
       }}
     >
       <Link
-        href={`/forest/${classmate.id}`}
+        href={`/forest/${classmate.user_id}`}
         className={cn(
           "group block surface-paper rounded-md lift-paper overflow-hidden",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-gold/60"

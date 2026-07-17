@@ -12,7 +12,7 @@ import {
   Mic,
 } from "lucide-react";
 import AudioPlayer from "@/components/features/AudioPlayer";
-import { getRecording } from "@/lib/db/recordings";
+import { getRecording, getRecordingByNum } from "@/lib/db/recordings";
 import { listClassmatesByIds } from "@/lib/db/classmates";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
@@ -27,7 +27,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const recording = await getRecording(id);
+  const recording = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
   if (!recording) return { title: "录音未找到" };
   return {
     title: `${recording.title} · 声音档案`,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RecordingPage({ params }: Props) {
   const { id } = await params;
-  const recording = await getRecording(id);
+  const recording = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
   if (!recording) notFound();
 
   const audioUrl = getPublicUrl(BUCKET_RECORDINGS, recording.audio_path);
@@ -181,7 +181,7 @@ export default async function RecordingPage({ params }: Props) {
                 {classmates.map((c) => (
                   <li key={c.id}>
                     <Link
-                      href={`/forest/${c.id}`}
+                      href={`/forest/${c.user_id}`}
                       className="inline-flex items-center gap-1.5 rounded-full border border-forest/30 bg-paper-soft px-3.5 py-1.5 font-serif text-sm text-ink-soft transition-all hover:border-forest hover:bg-forest hover:text-paper-soft"
                     >
                       <LeafMotif variant="mark" className="h-3 w-3" />

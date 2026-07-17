@@ -143,7 +143,7 @@ export default async function AdminClassmatesPage() {
                     </TableCell>
                     <TableCell className="text-right">
                       <Link
-                        href={`/admin/classmates/${c.id}/edit`}
+                        href={`/admin/classmates/${c.user_id}/edit`}
                         className="inline-flex items-center gap-1 rounded-md border border-forest/40 bg-paper-soft px-3 py-1.5 font-serif text-xs text-forest hover:bg-forest hover:text-paper-soft transition-colors"
                       >
                         编辑

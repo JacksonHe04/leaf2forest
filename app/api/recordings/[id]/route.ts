@@ -2,10 +2,18 @@ import { NextResponse } from 'next/server';
 import {
   deleteRecording,
   getRecording,
+  getRecordingByNum,
   updateRecording,
 } from '@/lib/db/recordings';
 
 export const dynamic = 'force-dynamic';
+
+/** The [id] segment carries a num; resolve to the internal uuid record. */
+async function resolve(raw: string) {
+  const byNum = await getRecordingByNum(Number(raw));
+  if (byNum) return byNum;
+  return await getRecording(raw);
+}
 
 export async function GET(
   _request: Request,
@@ -13,7 +21,7 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const recording = await getRecording(id);
+    const recording = await resolve(id);
     if (!recording) {
       return NextResponse.json({ error: '未找到录音' }, { status: 404 });
     }
@@ -30,8 +38,12 @@ export async function PUT(
 ) {
   try {
     const { id } = await params;
+    const recording = await resolve(id);
+    if (!recording) {
+      return NextResponse.json({ error: '未找到录音' }, { status: 404 });
+    }
     const body = await request.json();
-    const updated = await updateRecording(id, body);
+    const updated = await updateRecording(recording.id, body);
     return NextResponse.json({ status: 'success', data: updated });
   } catch (error) {
     console.error('更新录音失败:', error);
@@ -45,7 +57,11 @@ export async function DELETE(
 ) {
   try {
     const { id } = await params;
-    await deleteRecording(id);
+    const recording = await resolve(id);
+    if (!recording) {
+      return NextResponse.json({ error: '未找到录音' }, { status: 404 });
+    }
+    await deleteRecording(recording.id);
     return NextResponse.json({ status: 'success', message: '录音已删除' });
   } catch (error) {
     console.error('删除录音失败:', error);

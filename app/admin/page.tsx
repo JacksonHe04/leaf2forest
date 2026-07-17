@@ -128,7 +128,7 @@ export default async function AdminPage() {
                   className="py-3 flex items-center justify-between gap-3"
                 >
                   <Link
-                    href={`/echoes/${r.id}`}
+                    href={`/echoes/${r.num}`}
                     className="font-serif text-ink hover:text-forest transition-colors truncate"
                   >
                     {r.title}

@@ -86,7 +86,7 @@ export default function RecordingForm({ classmates, initial }: Props) {
       };
 
       const url = isEdit
-        ? `/api/recordings/${initial!.id}`
+        ? `/api/recordings/${initial!.num}`
         : "/api/recordings";
       const method = isEdit ? "PUT" : "POST";
 
