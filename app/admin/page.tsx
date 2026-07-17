@@ -1,185 +1,133 @@
-'use client';
-
-import { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { listRecordings } from '@/lib/db/recordings';
+import { listClassmates } from '@/lib/db/classmates';
+import { getSupabaseAdmin } from '@/lib/db/supabase';
+import { BUCKET_IMAGES, BUCKET_RECORDINGS } from '@/lib/storage';
 
-interface CollectionInfo {
-  name: string;
-  count: number;
-}
+export const dynamic = 'force-dynamic';
 
-/**
- * 数据库管理主页面
- * 显示所有集合的列表和基本信息
- */
-export default function AdminPage() {
-  const [collections, setCollections] = useState<CollectionInfo[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+export default async function AdminPage() {
+  const [recordings, classmates, supabase] = await Promise.all([
+    listRecordings({ limit: 5 }),
+    listClassmates(),
+    Promise.resolve(getSupabaseAdmin()),
+  ]);
 
-  /**
-   * 获取集合列表
-   */
-  const fetchCollections = async () => {
-    try {
-      setLoading(true);
-      const response = await fetch('/api/admin/collections');
-      const result = await response.json();
-      
-      if (result.status === 'success') {
-        setCollections(result.data);
-      } else {
-        setError('获取集合列表失败');
-      }
-    } catch (err) {
-      setError('网络错误');
-      console.error('获取集合列表失败:', err);
-    } finally {
-      setLoading(false);
-    }
+  const [recordingsCount, audioCount, imageCount] = await Promise.all([
+    supabase.from('recordings').select('*', { count: 'exact', head: true }),
+    supabase.storage
+      .from(BUCKET_RECORDINGS)
+      .list(undefined, { limit: 1 })
+      .then((r) => (Array.isArray(r.data) ? r.data.length : 0)),
+    supabase.storage
+      .from(BUCKET_IMAGES)
+      .list(undefined, { limit: 1 })
+      .then((r) => (Array.isArray(r.data) ? r.data.length : 0)),
+  ]);
+
+  const stats = {
+    recordings: recordingsCount.count ?? 0,
+    classmates: classmates.length,
+    audioFiles: audioCount, // best-effort; bucket has its own pagination
+    images: imageCount,
   };
-
-  useEffect(() => {
-    fetchCollections();
-  }, []);
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">加载中...</p>
-        </div>
-      </div>
-    );
-  }
-
-  if (error) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="text-red-500 text-xl mb-4">❌</div>
-          <p className="text-red-600">{error}</p>
-          <button
-            onClick={fetchCollections}
-            className="mt-4 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-          >
-            重试
-          </button>
-        </div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="container mx-auto px-4 py-8">
-        {/* 页面标题 */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">
-            数据库管理后台
-          </h1>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">数据后台</h1>
           <p className="text-gray-600">
-            管理 MongoDB 数据库中的所有集合和文档
+            所有数据都在 Supabase（Postgres + Storage）中，可公开访问。
           </p>
         </div>
 
-        {/* 统计信息 */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              总集合数
-            </h3>
-            <p className="text-3xl font-bold text-blue-600">
-              {collections.length}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              总文档数
-            </h3>
-            <p className="text-3xl font-bold text-green-600">
-              {collections.reduce((sum, col) => sum + col.count, 0)}
-            </p>
-          </div>
-          <div className="bg-white rounded-lg shadow p-6">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
-              数据库
-            </h3>
-            <p className="text-lg font-medium text-gray-700">
-              leaf-to-forest
-            </p>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+          <Stat label="录音（DB 行）" value={stats.recordings} />
+          <Stat label="同学（DB 行）" value={stats.classmates} />
+          <Stat label="音频对象（桶预览）" value={stats.audioFiles} />
+          <Stat label="图片对象（桶预览）" value={stats.images} />
         </div>
 
-        {/* 集合列表 */}
-        <div className="bg-white rounded-lg shadow">
-          <div className="px-6 py-4 border-b border-gray-200">
-            <h2 className="text-xl font-semibold text-gray-900">
-              数据集合
-            </h2>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="min-w-full divide-y divide-gray-200">
-              <thead className="bg-gray-50">
-                <tr>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    集合名称
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    文档数量
-                  </th>
-                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                    操作
-                  </th>
-                </tr>
-              </thead>
-              <tbody className="bg-white divide-y divide-gray-200">
-                {collections.map((collection) => (
-                  <tr key={collection.name} className="hover:bg-gray-50">
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <div className="text-sm font-medium text-gray-900">
-                        {collection.name}
-                      </div>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {collection.count} 个文档
-                      </span>
-                    </td>
-                    <td className="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                      <Link
-                        href={`/admin/collections/${collection.name}`}
-                        className="text-blue-600 hover:text-blue-900 mr-4"
-                      >
-                        查看数据
-                      </Link>
-                      <Link
-                        href={`/admin/collections/${collection.name}/new`}
-                        className="text-green-600 hover:text-green-900"
-                      >
-                        添加文档
-                      </Link>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <Panel
+            title="录音"
+            subtitle="在 recordings 表与 recordings 存储桶中"
+            links={[
+              { href: '/admin/recordings', label: '查看全部' },
+              { href: '/admin/recordings/new', label: '新增录音' },
+            ]}
+          />
+          <Panel
+            title="同学"
+            subtitle="在 classmates 表与 images 存储桶中（头像）"
+            links={[
+              { href: '/admin/classmates', label: '查看全部' },
+              { href: '/admin/classmates/new', label: '新增同学' },
+            ]}
+          />
         </div>
 
-        {/* 如果没有集合 */}
-        {collections.length === 0 && (
-          <div className="text-center py-12">
-            <div className="text-gray-400 text-6xl mb-4">📊</div>
-            <h3 className="text-lg font-medium text-gray-900 mb-2">
-              暂无数据集合
-            </h3>
-            <p className="text-gray-600">
-              数据库中还没有任何集合
-            </p>
-          </div>
-        )}
+        <div className="mt-8 bg-white shadow rounded-lg p-6">
+          <h2 className="text-lg font-semibold mb-4">最近的录音</h2>
+          {recordings.length === 0 ? (
+            <p className="text-gray-500">还没有录音。</p>
+          ) : (
+            <ul className="divide-y">
+              {recordings.map((r) => (
+                <li key={r.id} className="py-3 flex justify-between">
+                  <Link
+                    href={`/recordings/${r.id}`}
+                    className="text-blue-600 hover:text-blue-800"
+                  >
+                    {r.title}
+                  </Link>
+                  <span className="text-gray-500 text-sm">
+                    {r.date}
+                    {r.time ? ` ${r.time}` : ''}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Stat({ label, value }: { label: string; value: number }) {
+  return (
+    <div className="bg-white rounded-lg shadow p-4">
+      <p className="text-sm text-gray-500 mb-1">{label}</p>
+      <p className="text-2xl font-bold text-blue-600">{value}</p>
+    </div>
+  );
+}
+
+function Panel({
+  title,
+  subtitle,
+  links,
+}: {
+  title: string;
+  subtitle: string;
+  links: { href: string; label: string }[];
+}) {
+  return (
+    <div className="bg-white rounded-lg shadow p-6">
+      <h2 className="text-xl font-semibold mb-1">{title}</h2>
+      <p className="text-gray-500 text-sm mb-4">{subtitle}</p>
+      <div className="flex flex-wrap gap-3">
+        {links.map((l) => (
+          <Link
+            key={l.href}
+            href={l.href}
+            className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          >
+            {l.label}
+          </Link>
+        ))}
       </div>
     </div>
   );

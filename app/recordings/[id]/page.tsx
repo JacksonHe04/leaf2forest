@@ -1,100 +1,106 @@
-import { getRecordingById } from '@/lib/db/utils';
 import { notFound } from 'next/navigation';
-import AudioPlayer from '@/components/features/AudioPlayer';
 import { Metadata } from 'next';
+import AudioPlayer from '@/components/features/AudioPlayer';
+import { getRecording } from '@/lib/db/recordings';
+import { listClassmatesByIds } from '@/lib/db/classmates';
+import { getPublicUrl, BUCKET_RECORDINGS } from '@/lib/storage';
 
 interface Props {
-  params: Promise<{
-    id: string;
-  }>;
+  params: Promise<{ id: string }>;
 }
 
-// 生成页面元数据
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
-  const resolvedParams = await params;
-  const recording = await getRecordingById(resolvedParams.id);
-  
-  if (!recording) {
-    return {
-      title: '录音未找到',
-    };
-  }
-
+  const { id } = await params;
+  const recording = await getRecording(id);
+  if (!recording) return { title: '录音未找到' };
   return {
     title: recording.title,
-    description: recording.background,
+    description: recording.description ?? recording.background ?? undefined,
   };
 }
 
 export default async function RecordingPage({ params }: Props) {
-  const resolvedParams = await params;
-  const recording = await getRecordingById(resolvedParams.id);
+  const { id } = await params;
+  const recording = await getRecording(id);
+  if (!recording) notFound();
 
-  if (!recording) {
-    notFound();
-  }
+  const audioUrl = getPublicUrl(BUCKET_RECORDINGS, recording.audio_path);
+  const classmateIds = recording.classmates ?? [];
+  const classmates =
+    classmateIds.length > 0
+      ? await listClassmatesByIds(classmateIds)
+      : [];
 
   return (
     <main className="container mx-auto px-4 py-8">
       <div className="max-w-3xl mx-auto">
-        <div className="mb-8">
-          <div className="text-sm text-gray-500 mb-2">
-            {new Date(recording.date).toLocaleDateString('zh-CN', {
-              year: 'numeric',
-              month: 'long',
-              day: 'numeric'
-            })}
-          </div>
-          <h1 className="text-3xl font-bold mb-4">{recording.title}</h1>
-          
-          <div className="mb-6">
-            <AudioPlayer url={recording.audioUrl} />
-          </div>
+        <div className="text-sm text-gray-500 mb-2">
+          {new Date(recording.date).toLocaleDateString('zh-CN', {
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric',
+          })}
+          {recording.time && <span className="ml-2">{recording.time}</span>}
+        </div>
+        <h1 className="text-3xl font-bold mb-4">{recording.title}</h1>
 
-          <div className="prose max-w-none">
-            <h2 className="text-xl font-semibold mb-2">背景故事</h2>
-            <p className="text-gray-700 mb-6">{recording.background}</p>
+        <div className="mb-6">
+          <AudioPlayer url={audioUrl} />
+        </div>
 
-            <h2 className="text-xl font-semibold mb-2">文字转录</h2>
-            <p className="text-gray-700 mb-6">{recording.transcription}</p>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">参与者</h2>
-              <div className="flex flex-wrap gap-2">
-                {recording.participants.map((participant) => (
-                  <span 
-                    key={participant}
-                    className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full"
-                  >
-                    {participant}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            <div className="mb-6">
-              <h2 className="text-xl font-semibold mb-2">标签</h2>
-              <div className="flex flex-wrap gap-2">
-                {recording.tags.map((tag) => (
-                  <span 
-                    key={tag}
-                    className="px-3 py-1 bg-blue-100 text-blue-700 rounded-full"
-                  >
-                    {tag}
-                  </span>
-                ))}
-              </div>
-            </div>
-
-            {recording.location && (
-              <div>
-                <h2 className="text-xl font-semibold mb-2">位置</h2>
-                <p className="text-gray-700">{recording.location}</p>
-              </div>
+        {(recording.description || recording.background) && (
+          <div className="prose max-w-none mb-6">
+            {recording.background && (
+              <>
+                <h2 className="text-xl font-semibold mb-2">背景</h2>
+                <p className="text-gray-700 whitespace-pre-wrap mb-4">
+                  {recording.background}
+                </p>
+              </>
+            )}
+            {recording.description && (
+              <>
+                <h2 className="text-xl font-semibold mb-2">描述</h2>
+                <p className="text-gray-700 whitespace-pre-wrap mb-4">
+                  {recording.description}
+                </p>
+              </>
             )}
           </div>
-        </div>
+        )}
+
+        {recording.transcription && (
+          <div className="prose max-w-none mb-6">
+            <h2 className="text-xl font-semibold mb-2">文字转录</h2>
+            <p className="text-gray-700 whitespace-pre-wrap">
+              {recording.transcription}
+            </p>
+          </div>
+        )}
+
+        {classmates.length > 0 && (
+          <div className="mb-6">
+            <h2 className="text-xl font-semibold mb-2">关联同学</h2>
+            <div className="flex flex-wrap gap-2">
+              {classmates.map((c) => (
+                <span
+                  key={c.id}
+                  className="px-3 py-1 bg-gray-100 text-gray-700 rounded-full"
+                >
+                  {c.name}
+                </span>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {recording.location && (
+          <div>
+            <h2 className="text-xl font-semibold mb-2">地点</h2>
+            <p className="text-gray-700">{recording.location}</p>
+          </div>
+        )}
       </div>
     </main>
   );
-} 
+}
