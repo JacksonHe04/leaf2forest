@@ -2,6 +2,7 @@
 # 1. 项目专属的特有规则 (Project Specific)
 # ==========================================
 /data/
+/scripts/
 
 # ==========================================
 # 2. Agent 运行时与私有数据 (Agent & Local)
@@ -10,10 +11,12 @@ native/
 /local
 *_local/
 _satellites/
-.agents/native/
+.agents/
 .claude/
 .trae/
 .cursor/
+.workbuddy/
+
 .screenshots/
 .playwright-cli/
 
