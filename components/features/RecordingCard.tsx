@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Clock, MapPin, Users } from "lucide-react";
+import { Calendar, Clock, MapPin } from "lucide-react";
 import AudioPlayer from "./AudioPlayer";
 import type { Recording, Classmate } from "@/lib/db/types";
 import { cn } from "@/lib/utils";
@@ -130,19 +130,22 @@ export default function RecordingCard({
 
         {/* Footer — location + participants */}
         {(recording.location || classmates.length > 0) && (
-          <div className="mt-4 flex flex-wrap items-center gap-x-4 gap-y-2 border-t border-border/60 pt-3">
+          <div className="relative z-10 mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 border-t border-border/60 pt-3">
             {recording.location && (
               <span className="inline-flex items-center gap-1.5 font-serif text-xs text-ink-faint">
                 <MapPin className="h-3.5 w-3.5 text-forest" />
                 {recording.location}
               </span>
             )}
-            {classmates.length > 0 && (
-              <span className="inline-flex items-center gap-1.5 font-serif text-xs text-ink-faint">
-                <Users className="h-3.5 w-3.5 text-forest" />
-                {classmates.map((c) => c.name).join("、")}
-              </span>
-            )}
+            {classmates.map((c) => (
+              <Link
+                key={c.id}
+                href={`/forest/${c.user_id}`}
+                className="inline-flex items-center gap-1 rounded-full border border-forest/25 bg-forest/5 px-2 py-0.5 font-serif text-[11px] text-ink-soft transition-colors hover:border-forest hover:bg-forest hover:text-paper-soft"
+              >
+                {c.name}
+              </Link>
+            ))}
           </div>
         )}
       </div>
