@@ -36,7 +36,7 @@ export function EchoesClient({
     if (!query.trim()) return recordings;
     const q = query.trim().toLowerCase();
     return recordings.filter((r) =>
-      [r.title, r.description, r.background, r.location]
+      [r.title, r.story, r.location]
         .filter(Boolean)
         .some((t) => t!.toLowerCase().includes(q))
     );

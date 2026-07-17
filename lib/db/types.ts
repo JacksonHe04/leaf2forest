@@ -56,9 +56,8 @@ export interface Recording {
   date: string; // ISO date (YYYY-MM-DD)
   time: string | null; // HH:MM:SS
   title: string;
-  description: string | null;
+  story: string | null;
   transcription: string | null;
-  background: string | null;
   location: string | null;
   audio_path: string;
   duration_seconds: number | null;

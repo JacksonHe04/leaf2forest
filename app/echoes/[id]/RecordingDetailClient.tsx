@@ -516,45 +516,23 @@ export function RecordingDetailClient({
 
       {/* ============ Body ============ */}
       <div className="mt-10 grid grid-cols-1 gap-8">
-        {/* Background */}
+        {/* Story */}
         <section>
           <div className="flex items-center gap-3 mb-4">
             <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
               <Quote className="h-4 w-4" />
             </span>
             <div>
-              <div className="eyebrow">Context</div>
+              <div className="eyebrow">Story</div>
               <h2 className="display-heading text-2xl text-ink leading-tight">
-                背景
+                故事
               </h2>
             </div>
           </div>
           <EditableField
-            label="背景描述"
-            value={data.background ?? ""}
-            fieldKey="background"
-            multiline
-            onSave={saveField}
-          />
-        </section>
-
-        {/* Description */}
-        <section>
-          <div className="flex items-center gap-3 mb-4">
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-paper-deep text-forest">
-              <FileText className="h-4 w-4" />
-            </span>
-            <div>
-              <div className="eyebrow">Description</div>
-              <h2 className="display-heading text-2xl text-ink leading-tight">
-                描述
-              </h2>
-            </div>
-          </div>
-          <EditableField
-            label="描述"
-            value={data.description ?? ""}
-            fieldKey="description"
+            label="故事"
+            value={data.story ?? ""}
+            fieldKey="story"
             multiline
             onSave={saveField}
           />

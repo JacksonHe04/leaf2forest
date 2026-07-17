@@ -32,8 +32,7 @@ export default function RecordingForm({ classmates, teachers, initial }: Props) 
     initial?.date ?? new Date().toISOString().slice(0, 10)
   );
   const [time, setTime] = useState(initial?.time ?? "");
-  const [description, setDescription] = useState(initial?.description ?? "");
-  const [background, setBackground] = useState(initial?.background ?? "");
+  const [story, setStory] = useState(initial?.story ?? "");
   const [transcription, setTranscription] = useState(
     initial?.transcription ?? ""
   );
@@ -80,8 +79,7 @@ export default function RecordingForm({ classmates, teachers, initial }: Props) 
         title,
         date,
         time: time || null,
-        description: description || null,
-        background: background || null,
+        story: story || null,
         transcription: transcription || null,
         location: location || null,
         audio_path,
@@ -154,22 +152,13 @@ export default function RecordingForm({ classmates, teachers, initial }: Props) 
 
       {/* Narrative */}
       <FormSection title="叙事" eyebrow="02 / Narrative">
-        <Field label="背景">
+        <Field label="故事">
           <Textarea
-            rows={3}
-            value={background}
-            onChange={(e) => setBackground(e.target.value)}
+            rows={5}
+            value={story}
+            onChange={(e) => setStory(e.target.value)}
             className="font-serif bg-paper border-border leading-7"
-            placeholder="这段录音是在什么情境下产生的？"
-          />
-        </Field>
-        <Field label="描述" className="mt-4">
-          <Textarea
-            rows={3}
-            value={description}
-            onChange={(e) => setDescription(e.target.value)}
-            className="font-serif bg-paper border-border leading-7"
-            placeholder="录音里发生了什么？"
+            placeholder="这段录音背后的故事——在什么情境下产生的？发生了什么？"
           />
         </Field>
         <Field label="文字转录" className="mt-4">

@@ -53,9 +53,9 @@ export default function RecordingCard({
               {dateLabel}
             </span>
           </div>
-          {(recording.description || recording.background) && (
+          {recording.story && (
             <p className="font-serif text-sm text-ink-soft line-clamp-2">
-              {recording.description ?? recording.background}
+              {recording.story}
             </p>
           )}
           {!isEmpty && !isLoading && (
@@ -105,9 +105,9 @@ export default function RecordingCard({
           {recording.title}
         </h3>
 
-        {(recording.description || recording.background) && (
+        {recording.story && (
           <p className="mt-2 font-serif text-sm leading-7 text-ink-soft line-clamp-2">
-            {recording.description ?? recording.background}
+            {recording.story}
           </p>
         )}
 

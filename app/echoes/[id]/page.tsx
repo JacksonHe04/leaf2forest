@@ -33,7 +33,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
   if (!recording) return { title: "录音未找到" };
   return {
     title: `${recording.title} · 声音档案`,
-    description: recording.description ?? recording.background ?? undefined,
+    description: recording.story ?? undefined,
   };
 }
 
@@ -142,26 +142,14 @@ export default async function RecordingPage({ params }: Props) {
 
             {/* Body */}
             <div className="mt-10 grid grid-cols-1 gap-8">
-              {recording.background && (
+              {recording.story && (
                 <DetailSection
                   icon={<Quote className="h-4 w-4" />}
-                  title="背景"
-                  eyebrow="Context"
+                  title="故事"
+                  eyebrow="Story"
                 >
                   <p className="prose-archive whitespace-pre-wrap">
-                    {recording.background}
-                  </p>
-                </DetailSection>
-              )}
-
-              {recording.description && (
-                <DetailSection
-                  icon={<FileText className="h-4 w-4" />}
-                  title="描述"
-                  eyebrow="Description"
-                >
-                  <p className="prose-archive whitespace-pre-wrap">
-                    {recording.description}
+                    {recording.story}
                   </p>
                 </DetailSection>
               )}
