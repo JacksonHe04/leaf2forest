@@ -1,0 +1,48 @@
+/**
+ * Typed row shapes mirror the Postgres schema. Keep in sync with
+ * `supabase/migrations/init_classmates_recordings`.
+ */
+export interface Classmate {
+  id: string;
+  name: string;
+  avatar_path: string | null;
+  gender: string | null;
+  birth_date: string | null; // ISO date (YYYY-MM-DD)
+  city: string | null;
+  qq: string | null;
+  wechat: string | null;
+  phone: string | null;
+  employer: string | null;
+  industry: string | null;
+  bachelor_university: string | null;
+  bachelor_major: string | null;
+  master_university: string | null;
+  master_major: string | null;
+  doctor_university: string | null;
+  doctor_major: string | null;
+  bio: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export type ClassmatePatch = Partial<Omit<Classmate, 'id' | 'created_at' | 'updated_at'>>;
+
+export interface Recording {
+  id: string;
+  date: string; // ISO date (YYYY-MM-DD)
+  time: string | null; // HH:MM:SS
+  title: string;
+  description: string | null;
+  transcription: string | null;
+  background: string | null;
+  location: string | null;
+  audio_path: string;
+  duration_seconds: number | null;
+  classmates: string[]; // uuid[]
+  created_at: string;
+  updated_at: string;
+}
+
+export type RecordingPatch = Partial<
+  Omit<Recording, 'id' | 'created_at' | 'updated_at'>
+>;
