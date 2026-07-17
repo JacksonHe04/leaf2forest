@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft, ExternalLink } from "lucide-react";
-import { getRecording, getRecordingByNum } from "@/lib/db/recordings";
+import { getRecordingByIdOrNum } from "@/lib/db/recordings";
 import { listClassmates } from "@/lib/db/classmates";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
 import RecordingForm from "../../new/RecordingForm";
@@ -16,7 +16,7 @@ interface Props {
 
 export default async function EditRecordingPage({ params }: Props) {
   const { id } = await params;
-  const r = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
+  const r = await getRecordingByIdOrNum(id);
   if (!r) notFound();
 
   const classmates = await listClassmates();

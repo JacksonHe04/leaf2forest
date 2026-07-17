@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   deleteRecording,
-  getRecording,
-  getRecordingByNum,
+  getRecordingByIdOrNum,
   updateRecording,
 } from '@/lib/db/recordings';
 
@@ -10,9 +9,7 @@ export const dynamic = 'force-dynamic';
 
 /** The [id] segment carries a num; resolve to the internal uuid record. */
 async function resolve(raw: string) {
-  const byNum = await getRecordingByNum(Number(raw));
-  if (byNum) return byNum;
-  return await getRecording(raw);
+  return await getRecordingByIdOrNum(raw);
 }
 
 export async function GET(

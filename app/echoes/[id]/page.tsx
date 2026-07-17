@@ -12,7 +12,7 @@ import {
   Mic,
 } from "lucide-react";
 import AudioPlayer from "@/components/features/AudioPlayer";
-import { getRecording, getRecordingByNum } from "@/lib/db/recordings";
+import { getRecordingByIdOrNum } from "@/lib/db/recordings";
 import { listClassmatesByIds } from "@/lib/db/classmates";
 import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { getPublicUrl, BUCKET_RECORDINGS } from "@/lib/storage";
@@ -27,7 +27,7 @@ interface Props {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { id } = await params;
-  const recording = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
+  const recording = await getRecordingByIdOrNum(id);
   if (!recording) return { title: "录音未找到" };
   return {
     title: `${recording.title} · 声音档案`,
@@ -37,7 +37,7 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function RecordingPage({ params }: Props) {
   const { id } = await params;
-  const recording = (await getRecordingByNum(Number(id))) ?? (await getRecording(id));
+  const recording = await getRecordingByIdOrNum(id);
   if (!recording) notFound();
 
   const audioUrl = getPublicUrl(BUCKET_RECORDINGS, recording.audio_path);

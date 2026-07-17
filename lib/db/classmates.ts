@@ -23,6 +23,22 @@ export async function getClassmateByUserId(
   return (data ?? null) as Classmate | null;
 }
 
+const UUID_RE =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/**
+ * Resolve a classmate by user_id first, then by uuid id (only when the
+ * segment is actually a uuid — otherwise PostgREST rejects the bad format).
+ */
+export async function getClassmateByIdOrUserId(
+  id: string
+): Promise<Classmate | null> {
+  const byUid = await getClassmateByUserId(id);
+  if (byUid) return byUid;
+  if (UUID_RE.test(id)) return await getClassmate(id);
+  return null;
+}
+
 export async function listClassmatesByIds(ids: string[]): Promise<Classmate[]> {
   if (ids.length === 0) return [];
   const { data, error } = await table().select('*').in('id', ids);

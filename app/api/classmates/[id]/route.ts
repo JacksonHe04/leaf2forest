@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import {
   deleteClassmate,
-  getClassmate,
-  getClassmateByUserId,
+  getClassmateByIdOrUserId,
   updateClassmate,
 } from '@/lib/db/classmates';
 
@@ -10,7 +9,7 @@ export const dynamic = 'force-dynamic';
 
 /** The [id] segment carries a user_id; resolve to the internal uuid record. */
 async function resolve(userId: string) {
-  return (await getClassmateByUserId(userId)) ?? (await getClassmate(userId));
+  return await getClassmateByIdOrUserId(userId);
 }
 
 export async function GET(
