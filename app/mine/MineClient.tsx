@@ -14,6 +14,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { ClassmateProfileClient } from "@/components/features/ClassmateProfileClient";
 import { SITE } from "@/lib/site";
+import { leafLogoutPath } from "@/lib/auth/paths";
 import type { Classmate, Recording } from "@/lib/db/types";
 
 type Tab = "profile" | "account";
@@ -153,7 +154,7 @@ function TabButton({
 function LogoutButton() {
   return (
     <Link
-      href="/api/auth/inon/logout?returnTo=%2F"
+      href={leafLogoutPath("/")}
       className="group inline-flex items-center gap-2 rounded-md border border-border px-4 py-2.5 font-serif text-sm text-ink-soft hover:text-red-600 hover:border-red-300 transition-colors"
     >
       <LogOut className="h-3.5 w-3.5" />
