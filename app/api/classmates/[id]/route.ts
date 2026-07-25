@@ -4,6 +4,12 @@ import {
   getClassmateByIdOrUserId,
   updateClassmate,
 } from '@/lib/db/classmates';
+import {
+  forbidden,
+  isLeafAdminRequest,
+  viewerFromRequest,
+} from '@/lib/auth/viewer';
+import { setTeamMemberAssignment } from '@/lib/auth/team-members';
 
 export const dynamic = 'force-dynamic';
 
@@ -39,7 +45,36 @@ export async function PUT(
     if (!classmate) {
       return NextResponse.json({ error: '未找到同学' }, { status: 404 });
     }
-    const body = await request.json();
+    const body = (await request.json()) as Record<string, unknown>;
+    const viewer = await viewerFromRequest(request);
+    if (!viewer) return forbidden();
+    const isSelf = viewer.classmate?.id === classmate.id;
+    const isAdmin = await isLeafAdminRequest(request);
+    if (!isSelf && !isAdmin) return forbidden();
+
+    if ("team_account_email" in body) {
+      if (!isAdmin) return forbidden();
+      const email =
+        typeof body.team_account_email === "string"
+          ? body.team_account_email.trim() || null
+          : null;
+      await setTeamMemberAssignment({
+        classmateId: classmate.id,
+        email,
+        assignedBy: viewer.session.id,
+      });
+      delete body.team_account_email;
+    }
+
+    delete body.team_inon_user_id;
+    delete body.is_admin;
+    if (!isAdmin) {
+      delete body.name;
+      delete body.user_id;
+    }
+    if (Object.keys(body).length === 0) {
+      return NextResponse.json({ status: 'success', data: classmate });
+    }
     const updated = await updateClassmate(classmate.id, body);
     return NextResponse.json({ status: 'success', data: updated });
   } catch (error) {
@@ -49,9 +84,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const { id } = await params;
     const classmate = await resolve(id);

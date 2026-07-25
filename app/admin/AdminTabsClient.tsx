@@ -2,14 +2,15 @@
 
 import { useState } from "react";
 import { Users, Mic } from "lucide-react";
-import type { Classmate, Teacher, Recording } from "@/lib/db/types";
+import type { Teacher, Recording } from "@/lib/db/types";
+import type { AdminClassmate } from "@/lib/auth/team-members";
 import { ClassmatesTable } from "./classmates/ClassmatesTable";
 import { RecordingsTable } from "./RecordingsTable";
 
 type Tab = "classmates" | "recordings";
 
 interface Props {
-  classmates: Classmate[];
+  classmates: AdminClassmate[];
   teachers: Teacher[];
   recordings: Recording[];
 }

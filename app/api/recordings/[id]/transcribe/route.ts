@@ -9,6 +9,7 @@
 import { NextResponse } from 'next/server';
 import { getRecordingByIdOrNum } from '@/lib/db/recordings';
 import { getPublicUrl, BUCKET_RECORDINGS } from '@/lib/storage';
+import { forbidden, isLeafAdminRequest } from '@/lib/auth/viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -45,9 +46,10 @@ function sseDone(): string {
 }
 
 export async function POST(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   if (!VOLC_API_KEY) {
     return NextResponse.json(
       { error: 'VOLC_ASR_API_KEY 未配置' },

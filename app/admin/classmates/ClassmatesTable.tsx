@@ -19,7 +19,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import type { Classmate } from "@/lib/db/types";
+import type { AdminClassmate } from "@/lib/auth/team-members";
 
 /* ── Column definitions ── */
 
@@ -34,6 +34,13 @@ interface ColDef {
 
 const COLUMNS: ColDef[] = [
   { key: "name", label: "姓名", width: "w-28", type: "text", group: "基本" },
+  {
+    key: "team_account_email",
+    label: "iNon Team 邮箱",
+    width: "w-52",
+    type: "text",
+    group: "账号",
+  },
   {
     key: "gender",
     label: "性别",
@@ -79,7 +86,7 @@ function cellKey(rowId: string, colKey: string): string {
 /* ── Main component ── */
 
 interface Props {
-  initialClassmates: Classmate[];
+  initialClassmates: AdminClassmate[];
 }
 
 export function ClassmatesTable({ initialClassmates }: Props) {
@@ -98,7 +105,7 @@ export function ClassmatesTable({ initialClassmates }: Props) {
   }, [editing]);
 
   const getCellValue = useCallback(
-    (classmate: Classmate, key: string): string => {
+    (classmate: AdminClassmate, key: string): string => {
       const val = (classmate as unknown as Record<string, unknown>)[key];
       if (val === null || val === undefined) return "";
       if (key === "last_login_at" && typeof val === "string") {
@@ -109,7 +116,7 @@ export function ClassmatesTable({ initialClassmates }: Props) {
     []
   );
 
-  async function saveCell(classmate: Classmate, colKey: string, value: string) {
+  async function saveCell(classmate: AdminClassmate, colKey: string, value: string) {
     const ck = cellKey(classmate.id, colKey);
     setCellStatuses((prev) => ({ ...prev, [ck]: "saving" }));
     try {
@@ -133,7 +140,7 @@ export function ClassmatesTable({ initialClassmates }: Props) {
     }
   }
 
-  async function handleDelete(classmate: Classmate) {
+  async function handleDelete(classmate: AdminClassmate) {
     if (!confirm(`确定要删除同学「${classmate.name}」吗？此操作不可撤销。`)) return;
     setDeleting(classmate.id);
     try {
@@ -147,7 +154,7 @@ export function ClassmatesTable({ initialClassmates }: Props) {
     }
   }
 
-  function startEditing(classmate: Classmate, col: ColDef) {
+  function startEditing(classmate: AdminClassmate, col: ColDef) {
     setEditing({ rowId: classmate.id, colKey: col.key });
     setEditValue(getCellValue(classmate, col.key));
   }

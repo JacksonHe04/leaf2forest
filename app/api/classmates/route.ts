@@ -1,10 +1,9 @@
-import { NextRequest, NextResponse } from 'next/server';
+import { NextResponse } from 'next/server';
 import {
   createClassmate,
-  deleteClassmate,
   listClassmates,
-  updateClassmate,
 } from '@/lib/db/classmates';
+import { forbidden, isLeafAdminRequest } from '@/lib/auth/viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -19,6 +18,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const body = await request.json();
     const created = await createClassmate(body);

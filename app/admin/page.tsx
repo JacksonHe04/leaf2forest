@@ -11,17 +11,19 @@ import { getSupabaseAdmin } from "@/lib/db/supabase";
 import { BUCKET_IMAGES, BUCKET_RECORDINGS } from "@/lib/storage";
 import { PageTransition } from "@/components/site/PageTransition";
 import { LeafMotif } from "@/components/site/LeafMotif";
+import { listAdminClassmates } from "@/lib/auth/team-members";
 import { AdminTabsClient } from "./AdminTabsClient";
 
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {
-  const [classmates, teachers, recordings, supabase] = await Promise.all([
+  const [rawClassmates, teachers, recordings, supabase] = await Promise.all([
     listClassmates(),
     listTeachers(),
     listRecordings(),
     Promise.resolve(getSupabaseAdmin()),
   ]);
+  const classmates = await listAdminClassmates(rawClassmates);
 
   const [recordingsCount, audioList, imageList] = await Promise.all([
     supabase.from("recordings").select("*", { count: "exact", head: true }),

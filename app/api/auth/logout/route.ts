@@ -1,10 +1,8 @@
-import { NextResponse } from 'next/server';
-import { createSupabaseServerClient } from '@/lib/db/supabase-server';
+import { NextResponse } from "next/server";
 
 export async function POST(request: Request) {
-  const supabase = await createSupabaseServerClient();
-  await supabase.auth.signOut();
-
-  const url = new URL(request.url);
-  return NextResponse.redirect(`${url.protocol}//${url.host}/`);
+  return NextResponse.redirect(
+    new URL("/api/auth/inon/logout?returnTo=%2F", request.url),
+    303,
+  );
 }

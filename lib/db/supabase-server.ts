@@ -1,9 +1,10 @@
-import { createServerClient, type CookieOptions } from '@supabase/ssr';
+import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import {
   requireSupabaseEnv,
   SUPABASE_SERVICE_ROLE_KEY,
 } from '../env';
+import { getLeafViewer } from '@/lib/auth/viewer';
 
 /**
  * Server-side Supabase client with cookie-based session support.
@@ -64,13 +65,18 @@ export async function createSupabaseAdminServerClient() {
  * Returns null if not authenticated.
  */
 export async function getCurrentUser() {
-  const supabase = await createSupabaseServerClient();
-  const {
-    data: { user },
-    error,
-  } = await supabase.auth.getUser();
-  if (error || !user) return null;
-  return user;
+  const viewer = await getLeafViewer();
+  if (!viewer) return null;
+  return {
+    id: viewer.session.id,
+    email: viewer.session.email,
+    user_metadata: {
+      is_admin: viewer.isAdmin,
+      classmate_id: viewer.classmate?.id ?? null,
+      user_id: viewer.classmate?.user_id ?? null,
+      name: viewer.classmate?.name ?? viewer.session.username,
+    },
+  };
 }
 
 /**
@@ -78,12 +84,5 @@ export async function getCurrentUser() {
  * Returns null if not authenticated or no matching classmate.
  */
 export async function getCurrentClassmate() {
-  const user = await getCurrentUser();
-  if (!user) return null;
-
-  const classmateId = user.user_metadata?.classmate_id as string | undefined;
-  if (!classmateId) return null;
-
-  const { getClassmate } = await import('./classmates');
-  return await getClassmate(classmateId);
+  return (await getLeafViewer())?.classmate ?? null;
 }

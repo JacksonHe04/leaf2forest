@@ -6,10 +6,22 @@ import {
   validateFileSize,
   validateFileType,
 } from '@/lib/storage';
+import {
+  forbidden,
+  isLeafAdminRequest,
+  viewerFromRequest,
+} from '@/lib/auth/viewer';
 
 const MAX_MB = 10;
 
 export async function POST(request: NextRequest) {
+  const viewer = await viewerFromRequest(request);
+  if (
+    !viewer ||
+    (!viewer.classmate && !(await isLeafAdminRequest(request)))
+  ) {
+    return forbidden();
+  }
   try {
     const formData = await request.formData();
     const file = formData.get('file') as File | null;

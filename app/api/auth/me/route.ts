@@ -1,29 +1,19 @@
-import { NextResponse } from 'next/server';
-import { getCurrentUser } from '@/lib/db/supabase-server';
-import { getClassmateByUserId } from '@/lib/db/classmates';
+import { getLeafViewer } from "@/lib/auth/viewer";
 
-/**
- * GET /api/auth/me — returns the current authenticated user's info.
- * Used by client components to determine auth state without making
- * the layout dynamic.
- */
 export async function GET() {
-  const user = await getCurrentUser();
-  if (!user) {
-    return NextResponse.json({ user: null });
-  }
+  const viewer = await getLeafViewer();
+  if (!viewer) return Response.json({ user: null });
 
-  const classmate = user.user_metadata?.user_id
-    ? await getClassmateByUserId(user.user_metadata.user_id)
-    : null;
-
-  return NextResponse.json({
+  return Response.json({
     user: {
-      id: user.id,
-      is_admin: user.user_metadata?.is_admin === true,
-      classmate_id: classmate?.id ?? null,
-      user_id: classmate?.user_id ?? user.user_metadata?.user_id ?? null,
-      name: classmate?.name ?? null,
+      id: viewer.session.id,
+      email: viewer.session.email,
+      username: viewer.session.username,
+      is_admin: viewer.isAdmin,
+      classmate_id: viewer.classmate?.id ?? null,
+      user_id: viewer.classmate?.user_id ?? null,
+      name: viewer.classmate?.name ?? viewer.session.username,
+      is_team_member: Boolean(viewer.classmate),
     },
   });
 }

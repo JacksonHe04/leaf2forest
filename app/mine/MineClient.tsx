@@ -1,17 +1,14 @@
 "use client";
 
 import { useState } from "react";
+import Link from "next/link";
 import {
+  ExternalLink,
   Lock,
   LogOut,
   User,
-  Loader2,
-  AlertCircle,
-  CheckCircle,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
@@ -89,49 +86,6 @@ export function MineClient({ classmate, avatarUrl, recordings }: Props) {
 /* ── Account management tab ── */
 
 function AccountTab({ classmate }: { classmate: Classmate }) {
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmPassword, setConfirmPassword] = useState("");
-  const [changingPw, setChangingPw] = useState(false);
-  const [pwError, setPwError] = useState("");
-  const [pwSuccess, setPwSuccess] = useState(false);
-
-  async function handleChangePassword(e: React.FormEvent) {
-    e.preventDefault();
-    setPwError("");
-    setPwSuccess(false);
-
-    if (newPassword !== confirmPassword) {
-      setPwError("两次输入的密码不一致");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setPwError("密码至少需要 6 个字符");
-      return;
-    }
-
-    setChangingPw(true);
-    try {
-      const res = await fetch("/api/auth/change-password", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ newPassword }),
-      });
-      const data = await res.json();
-      if (!res.ok) {
-        setPwError(data.error || "修改失败");
-        setChangingPw(false);
-        return;
-      }
-      setPwSuccess(true);
-      setNewPassword("");
-      setConfirmPassword("");
-    } catch {
-      setPwError("网络错误，请稍后重试");
-    } finally {
-      setChangingPw(false);
-    }
-  }
-
   return (
     <div className="mx-auto max-w-3xl space-y-6">
       <div className="surface-paper rounded-md p-6 sm:p-7">
@@ -148,71 +102,15 @@ function AccountTab({ classmate }: { classmate: Classmate }) {
             </p>
           </div>
         </div>
-
-        <form onSubmit={handleChangePassword} className="space-y-5">
-          <h3 className="font-serif text-sm font-medium text-ink">
-            修改密码
-          </h3>
-
-          {pwError && (
-            <div className="flex items-start gap-2 rounded-md border border-red-300/50 bg-red-50/50 px-3 py-2.5">
-              <AlertCircle className="mt-0.5 h-4 w-4 shrink-0 text-red-500" />
-              <p className="font-serif text-xs text-red-700 leading-6">
-                {pwError}
-              </p>
-            </div>
-          )}
-          {pwSuccess && (
-            <div className="flex items-start gap-2 rounded-md border border-forest/30 bg-forest/5 px-3 py-2.5">
-              <CheckCircle className="mt-0.5 h-4 w-4 shrink-0 text-forest" />
-              <p className="font-serif text-xs text-forest leading-6">
-                密码修改成功。
-              </p>
-            </div>
-          )}
-
-          <div className="space-y-2">
-            <Label className="font-serif text-ink-soft">新密码</Label>
-            <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
-              <Input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={newPassword}
-                onChange={(e) => setNewPassword(e.target.value)}
-                className="pl-9 bg-paper border-border font-serif"
-                placeholder="至少 6 个字符"
-              />
-            </div>
-          </div>
-
-          <div className="space-y-2">
-            <Label className="font-serif text-ink-soft">确认新密码</Label>
-            <div className="relative">
-              <Lock className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-ink-faint" />
-              <Input
-                type="password"
-                autoComplete="new-password"
-                required
-                minLength={6}
-                value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                className="pl-9 bg-paper border-border font-serif"
-                placeholder="再输入一次"
-              />
-            </div>
-          </div>
-
-          <Button
-            type="submit"
-            disabled={changingPw || pwSuccess}
-            className="h-10 px-5 font-serif bg-forest hover:bg-forest-deep"
-          >
-            {changingPw ? "提交中…" : "修改密码"}
-          </Button>
-        </form>
+        <p className="font-serif text-sm leading-7 text-ink-soft">
+          用户名、密码、邮箱与登录设备由 iNon 统一账号管理。
+        </p>
+        <Button asChild className="mt-5 font-serif bg-forest hover:bg-forest-deep">
+          <a href="https://inon.space/sso/account">
+            管理 iNon 账号
+            <ExternalLink className="h-3.5 w-3.5" />
+          </a>
+        </Button>
       </div>
 
       {/* Logout */}
@@ -254,14 +152,12 @@ function TabButton({
 
 function LogoutButton() {
   return (
-    <form action="/api/auth/logout" method="POST">
-      <button
-        type="submit"
-        className="group inline-flex items-center gap-2 rounded-md border border-border px-4 py-2.5 font-serif text-sm text-ink-soft hover:text-red-600 hover:border-red-300 transition-colors"
-      >
-        <LogOut className="h-3.5 w-3.5" />
-        退出登录
-      </button>
-    </form>
+    <Link
+      href="/api/auth/inon/logout?returnTo=%2F"
+      className="group inline-flex items-center gap-2 rounded-md border border-border px-4 py-2.5 font-serif text-sm text-ink-soft hover:text-red-600 hover:border-red-300 transition-colors"
+    >
+      <LogOut className="h-3.5 w-3.5" />
+      退出 Leaf
+    </Link>
   );
 }

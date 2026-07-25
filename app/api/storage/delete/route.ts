@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getSupabaseAdmin } from '@/lib/db/supabase';
+import { forbidden, isLeafAdminRequest } from '@/lib/auth/viewer';
 
 export async function DELETE(request: NextRequest) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const body = (await request.json()) as {
       bucket?: string;

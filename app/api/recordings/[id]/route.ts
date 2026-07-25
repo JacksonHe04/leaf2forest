@@ -5,6 +5,7 @@ import {
   updateRecording,
 } from '@/lib/db/recordings';
 import { resolvePeople } from '@/lib/db/people';
+import { forbidden, isLeafAdminRequest } from '@/lib/auth/viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -36,6 +37,7 @@ export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const { id } = await params;
     const recording = await resolve(id);
@@ -52,9 +54,10 @@ export async function PUT(
 }
 
 export async function DELETE(
-  _request: Request,
+  request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const { id } = await params;
     const recording = await resolve(id);

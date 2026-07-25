@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { createRecording, listRecordings } from '@/lib/db/recordings';
-import type { Recording, RecordingPatch } from '@/lib/db/types';
+import type { RecordingPatch } from '@/lib/db/types';
+import { forbidden, isLeafAdminRequest } from '@/lib/auth/viewer';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,6 +16,7 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
+  if (!(await isLeafAdminRequest(request))) return forbidden();
   try {
     const body = (await request.json()) as RecordingPatch;
     const required: (keyof RecordingPatch)[] = [
