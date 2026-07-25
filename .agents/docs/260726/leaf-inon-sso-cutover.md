@@ -53,6 +53,21 @@ build compiled and typechecked, then the existing `/echoes` prerender failed
 while Supabase returned `PGRST303 JWT issued at future`; this failure occurred
 while reading existing archive data, outside the SSO code path.
 
+## Production rollout
+
+Vercel production deployment `dpl_7ktbTWCaokWNJoRVxXsEUiP6eSdd` reached
+`READY` and was assigned to `https://leaf.inon.space`.
+
+Production smoke verification confirmed:
+
+- the public home page returns HTTP 200;
+- the Leaf login endpoint returns HTTP 303 to the canonical
+  `https://inon.space/api/sso/auth/oauth2/authorize` endpoint;
+- the OAuth callback is exactly
+  `https://leaf.inon.space/api/auth/inon/callback`;
+- the retired Leaf password-login endpoint returns HTTP 410 with the iNon SSO
+  replacement URL.
+
 ## Existing Supabase exposure
 
 Supabase reports that `public.classmates`, `public.recordings`, and
