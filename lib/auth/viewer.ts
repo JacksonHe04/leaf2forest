@@ -3,6 +3,7 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 
 import { getLeafSso } from "@/lib/auth/inon-sso";
+import { leafLoginPath, leafRefreshPath } from "@/lib/auth/paths";
 import { resolveTeamMember } from "@/lib/auth/team-members";
 import type { Classmate } from "@/lib/db/types";
 
@@ -72,10 +73,10 @@ export async function requireLeafAdminPage(
   } catch (error) {
     if (error instanceof InonSsoError) {
       if (error.code === "UNAUTHENTICATED") {
-        redirect(getLeafSso().loginUrl(returnTo));
+        redirect(leafLoginPath(returnTo));
       }
       if (error.code === "REFRESH_REQUIRED") {
-        redirect(getLeafSso().refreshUrl(returnTo));
+        redirect(leafRefreshPath(returnTo));
       }
       if (error.code === "FORBIDDEN") redirect("/");
     }
