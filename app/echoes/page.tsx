@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { EchoesClient } from "./EchoesClient";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 type PeopleMap = Record<string, Person>;
 
