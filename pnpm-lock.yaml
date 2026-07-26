@@ -9,8 +9,8 @@ importers:
   .:
     dependencies:
       '@inon-ai/inon-sso':
-        specifier: 0.1.0
-        version: 0.1.0
+        specifier: 0.1.1
+        version: 0.1.1
       '@supabase/ssr':
         specifier: ^0.12.3
         version: 0.12.3(@supabase/supabase-js@2.110.7)
@@ -484,8 +484,8 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@inon-ai/inon-sso@0.1.0':
-    resolution: {integrity: sha512-6b10HwZ3HDzZV0jm8GnmkU4iofaVKAHSXMd8Amd4WANOiQN1PEchN514/YViUPQx0lWoRUjYHkevCRk6NRlReg==}
+  '@inon-ai/inon-sso@0.1.1':
+    resolution: {integrity: sha512-Rtea7of6pfYtZ2nEYSWs04QLd0yp6qW98c6z6ClhwOnNB99ES627JTxtMWR6WCyNsN2ISuyUR1XMxlL71Rl03g==}
     engines: {node: '>=20.19.0'}
 
   '@jridgewell/gen-mapping@0.3.12':
@@ -2690,9 +2690,6 @@ packages:
     resolution: {integrity: sha512-AC/7JofJvZGrrneWNaEnJeOLUx+JlGt7tNa0wZiRPT4MY1wmfKjt2+6O2p2uz2+skll8OZZmJMNqeke7kKbNgQ==}
     hasBin: true
 
-  jose@6.2.3:
-    resolution: {integrity: sha512-YYVDInQKFJfR/xa3ojUTl8c2KoTwiL1R5Wg9YCydwH0x0B9grbzlg5HC7mMjCtUJjbQ/YnGEZIhI5tCgfTb4Hw==}
-
   jose@6.2.4:
     resolution: {integrity: sha512-N8acGzVsQy6M/fjFcxtysNc4Q379TcM5dM/qKkNtsHFji88yANnXTr7BLeP75iPnFwBfQzM/jg2BZ9+HZrHCZA==}
 
@@ -4212,7 +4209,7 @@ snapshots:
   '@img/sharp-win32-x64@0.34.5':
     optional: true
 
-  '@inon-ai/inon-sso@0.1.0':
+  '@inon-ai/inon-sso@0.1.1':
     dependencies:
       jose: 6.2.4
 
@@ -4250,7 +4247,7 @@ snapshots:
       express: 5.2.1
       express-rate-limit: 8.6.0(express@5.2.1)
       hono: 4.12.30
-      jose: 6.2.3
+      jose: 6.2.4
       json-schema-typed: 8.0.2
       pkce-challenge: 5.0.1
       raw-body: 3.0.2
@@ -6572,8 +6569,6 @@ snapshots:
       set-function-name: 2.0.2
 
   jiti@2.7.0: {}
-
-  jose@6.2.3: {}
 
   jose@6.2.4: {}
 
