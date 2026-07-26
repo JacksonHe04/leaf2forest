@@ -11,7 +11,7 @@ import { LeafMotif } from "@/components/site/LeafMotif";
 import { SectionTitle } from "@/components/site/SectionTitle";
 import { SITE } from "@/lib/site";
 
-export const revalidate = 60;
+export const dynamic = "force-dynamic";
 
 export default async function HomePage() {
   const recordings = await listRecordings({ limit: 24 });
