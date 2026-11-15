@@ -8,7 +8,7 @@ import { MineClient } from "./MineClient";
 import { PageHeader } from "@/components/site/PageHeader";
 import { LeafMotif } from "@/components/site/LeafMotif";
 import { Button } from "@/components/ui/button";
-import { leafLogoutPath } from "@/lib/auth/paths";
+import { leafAccountUrl, leafLogoutPath } from "@/lib/auth/paths";
 
 export const dynamic = "force-dynamic";
 
@@ -43,7 +43,7 @@ export default async function MinePage() {
           </p>
           <div className="mt-6 flex flex-wrap gap-3">
             <Button asChild className="font-serif bg-forest hover:bg-forest-deep">
-              <a href="https://inon.space/sso/account">查看 iNon 账号</a>
+              <a href={leafAccountUrl}>查看 iNon 账号</a>
             </Button>
             <Button asChild variant="outline" className="font-serif">
               <Link href={leafLogoutPath("/")}>退出 Leaf</Link>

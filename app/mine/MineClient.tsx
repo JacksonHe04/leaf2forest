@@ -14,7 +14,7 @@ import { PageHeader } from "@/components/site/PageHeader";
 import { PageTransition } from "@/components/site/PageTransition";
 import { ClassmateProfileClient } from "@/components/features/ClassmateProfileClient";
 import { SITE } from "@/lib/site";
-import { leafLogoutPath } from "@/lib/auth/paths";
+import { leafAccountUrl, leafLogoutPath } from "@/lib/auth/paths";
 import type { Classmate, Recording } from "@/lib/db/types";
 
 type Tab = "profile" | "account";
@@ -107,7 +107,7 @@ function AccountTab({ classmate }: { classmate: Classmate }) {
           用户名、密码、邮箱与登录设备由 iNon 统一账号管理。
         </p>
         <Button asChild className="mt-5 font-serif bg-forest hover:bg-forest-deep">
-          <a href="https://inon.space/sso/account">
+          <a href={leafAccountUrl}>
             管理 iNon 账号
             <ExternalLink className="h-3.5 w-3.5" />
           </a>

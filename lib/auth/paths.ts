@@ -1,3 +1,5 @@
+export const leafAccountUrl = "https://sso.inon.space/sso/account";
+
 function publicSsoPath(
   action: "end" | "refresh" | "start",
   returnTo: string,
