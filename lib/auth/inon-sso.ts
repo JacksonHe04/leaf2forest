@@ -25,6 +25,7 @@ export function getLeafSso() {
     clientSecret: required("INON_SSO_CLIENT_SECRET"),
     sessionSecret: required("INON_SSO_SESSION_SECRET"),
     appOrigin: origin,
+    issuer: process.env.INON_SSO_ISSUER ?? "https://sso.inon.space/api/sso/auth",
     secureCookies: origin.startsWith("https://"),
   });
   return client;
